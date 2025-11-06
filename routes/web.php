@@ -4,10 +4,12 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RopaController;
+use App\Http\Controllers\RiskScoreController;
 use App\Http\Controllers\ReviewController;
 
 
 Route::get('/', function () {
+    
     return view('auth.login');
 });
 

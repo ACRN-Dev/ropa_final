@@ -33,6 +33,7 @@ class Ropa extends Model
         'organisation_name',
         'department_name',
         'other_department',
+        'user_id',
     ];
 
     /**

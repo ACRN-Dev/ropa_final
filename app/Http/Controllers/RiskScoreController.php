@@ -11,7 +11,7 @@ class RiskScoreController extends Controller
     public function index()
     {
         $riskScores = RiskScore::with('ropa')->paginate(10);
-        return view('admindashboard.risk_scores.index', compact('riskScores'));
+        return view('admindashboard.score.index', compact('riskScores'));
     }
 
     public function create()

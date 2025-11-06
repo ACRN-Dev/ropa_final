@@ -3,18 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ropa;
+use App\Models\Review;
 use Illuminate\Http\Request;
 
 class RopaController extends Controller
 {
+
+
+    // Add this constructor here
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
+    
     /**
      * Display a listing of the resource.
      */
-    public function index()
+     public function index()
     {
         $reviews = Review::with('ropa')->paginate(10);
         $ropas = Ropa::latest()->paginate(10);
-        return view('ropa.index', compact('reviews'));
+
+        return view('ropa.index', compact('reviews', 'ropas'));
     }
 
 //     public function adminIndex()
@@ -61,6 +72,9 @@ class RopaController extends Controller
             'department_name' => 'nullable|string|max:255',
             'other_department' => 'nullable|string|max:255',
         ]);
+
+        // Add the current user's ID before saving
+        $data['user_id'] = auth()->id();
 
         Ropa::create($data);
 
