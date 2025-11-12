@@ -30,20 +30,17 @@
             </li>
 
 
+
+
+
+
+           
 <li class="mb-2">
-    <a href="{{ route('reviews.index') }}" class="flex items-center py-2 px-3 rounded hover:bg-indigo-600">
-        <i data-feather="message-square" class="w-5 h-5 mr-2"></i> Reviews
+    <a href="{{ route('admin.analytics') }}" class="flex items-center py-2 px-3 rounded hover:bg-indigo-600">
+        <i data-feather="bar-chart-2" class="w-5 h-5 mr-2"></i>Analytics
     </a>
 </li>
 
-
-
-
-            <li class="mb-2">
-                <a href="#" class="flex items-center py-2 px-3 rounded hover:bg-indigo-600">
-                    <i data-feather="bar-chart-2" class="w-5 h-5 mr-2"></i> Reports
-                </a>
-            </li>
 
  <li class="mb-2">
     <a href="{{ route('risk_scores.index') }}" class="flex items-center py-2 px-3 rounded hover:bg-indigo-600">
@@ -60,12 +57,12 @@
     </a>
 </li>
 
-
 <li class="mb-2">
-    <a href="" class="flex items-center py-2 px-3 rounded hover:bg-indigo-600">
+    <a href="{{ route('activities.index') }}" class="flex items-center py-2 px-3 rounded hover:bg-indigo-600">
         <i data-feather="clipboard" class="w-5 h-5 mr-2"></i> System Logs
     </a>
 </li>
+
 
 
 <li class="mb-2">

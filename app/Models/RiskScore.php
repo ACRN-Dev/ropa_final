@@ -9,23 +9,50 @@ class RiskScore extends Model
 {
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'ropa_id',
-        'risk_level',
-        'category',
-        'factors_considered',
-        'assessed_by',
-        'assessment_date',
+        'field_name',
+        'score',
+        'remarks',
     ];
 
-    protected $casts = [
-        'assessment_date' => 'date',
-        'risk_level' => 'integer',
-    ];
-
-    // Relationships
+    /**
+     * The relationship: a RiskScore belongs to a single ROPA record.
+     */
     public function ropa()
     {
         return $this->belongsTo(Ropa::class);
+    }
+
+    /**
+     * Helper: Determine a qualitative risk level (optional).
+     * You can use this in reports or dashboards.
+     */
+    public function getRiskLevelAttribute()
+    {
+        if ($this->score >= 15) {
+            return 'High';
+        } elseif ($this->score >= 8) {
+            return 'Medium';
+        } else {
+            return 'Low';
+        }
+    }
+
+    /**
+     * Helper: Color label for UI (Bootstrap-based).
+     */
+    public function getRiskColorAttribute()
+    {
+        return match ($this->risk_level) {
+            'High' => 'danger',
+            'Medium' => 'warning',
+            default => 'success',
+        };
     }
 }

@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Models\Ropa;
+use App\Mail\UserStatusChanged;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 
 class DashboardController extends Controller
@@ -126,15 +130,53 @@ public function toggleStatus(User $user)
                          ->with('error', 'You cannot change your own account status.');
     }
 
-    // Toggle the active status
-    $user->active = !$user->active;
-    $user->save();
+    try {
+        // Toggle active status
+        $user->active = !$user->active;
+        $user->save();
 
-    $status = $user->active ? 'activated' : 'deactivated';
+        $status = $user->active ? 'activated' : 'deactivated';
 
-    return redirect()->route('admin.users.index')
-                     ->with('success', "User account {$status} successfully.");
+        // Log the status change
+        Log::info("User status toggled.", [
+            'changed_user_id' => $user->id,
+            'changed_user_email' => $user->email,
+            'new_status' => $status,
+            'changed_by_admin_id' => auth()->id(),
+        ]);
+
+        // Send email notification using SendGrid
+        try {
+            Mail::mailer('sendgrid')->to($user->email)->send(new UserStatusChanged($user, $status));
+            Log::info("UserStatusChanged email sent successfully.", [
+                'recipient' => $user->email,
+                'status' => $status,
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Failed to send UserStatusChanged email.", [
+                'recipient' => $user->email,
+                'status' => $status,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return redirect()->route('admin.users.index')
+                         ->with('success', "User account {$status} successfully.");
+
+    } catch (\Exception $e) {
+        // Log failure details
+        Log::error("Failed to toggle user status.", [
+            'user_id' => $user->id,
+            'user_email' => $user->email,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+
+        return redirect()->route('admin.users.index')
+                         ->with('error', 'Failed to change user status. Check logs for details.');
+    }
 }
+
 
 
 public function show(User $user)
@@ -142,6 +184,116 @@ public function show(User $user)
     return view('admindashboard.user.show', compact('user'));
 }
 
+public function analytics(Request $request)
+{
+    $ropas = Ropa::with('user')
+        ->when($request->department, fn($q) => $q->where('department_name', $request->department))
+        ->when($request->month, fn($q) => 
+            $q->whereMonth('date_submitted', date('m', strtotime($request->month)))
+        )
+        ->orderBy('date_submitted', 'desc')
+        ->paginate(10);
+
+    $totalRecords = Ropa::count();
+    $highRisk = 25; // Replace with actual calculated values
+    $mediumRisk = 40;
+    $lowRisk = 35;
+
+    // ✅ Count reviewed vs pending
+    $reviewedCount = Ropa::where('status', 'Reviewed')->count();
+    $pendingCount = Ropa::where('status', 'Pending')->count();
+
+    // ✅ Make sure to pass these to the view
+    return view('admindashboard.analytics.index', compact(
+        'ropas',
+        'totalRecords',
+        'highRisk',
+        'mediumRisk',
+        'lowRisk',
+        'reviewedCount',
+        'pendingCount'
+    ));
+}
+
+
+public function createUser()
+{
+    return view('admindashboard.user.create');
+}
+
+/**
+ * Store a newly created user.
+ */
+
+
+
+
+public function store(Request $request)
+{
+    // Validate request
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email',
+        'department' => 'nullable|string|max:255',
+        'job_title' => 'nullable|string|max:255',
+        'user_type' => 'required|in:0,1',
+        'password' => 'required|string|min:8|confirmed', // Minimum 8 chars
+    ]);
+
+    // Log start of user creation
+    Log::info('User creation initiated.', [
+        'admin_id' => auth()->id(),
+        'admin_email' => auth()->user()->email ?? 'unknown',
+        'attempted_user_email' => $validated['email']
+    ]);
+
+    try {
+        // Store plain password temporarily for email
+        $plainPassword = $validated['password'];
+
+        // Create the user
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'department' => $validated['department'] ?? null,
+            'job_title' => $validated['job_title'] ?? null,
+            'user_type' => $validated['user_type'],
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        // Log user creation success
+        Log::info('New user created successfully.', [
+            'user_id' => $user->id,
+            'user_email' => $user->email,
+            'created_by_admin_id' => auth()->id()
+        ]);
+
+        // Send email via SendGrid
+        try {
+            Mail::to($user->email)->send(new UserAccountCreated($user, $plainPassword));
+            Log::info('UserAccountCreated email sent successfully.', [
+                'recipient' => $user->email
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send UserAccountCreated email.', [
+                'recipient' => $user->email,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return redirect()->route('admin.users.index')
+                         ->with('success', 'User created successfully and email notification sent.');
+
+    } catch (\Exception $e) {
+        // Log creation failure
+        Log::error('User creation failed.', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return back()->with('error', 'Failed to create user. Check logs for details.');
+    }
+}
 
 
 }

@@ -1,83 +1,66 @@
 @extends('layouts.admin')
 
-@section('title', 'ROPA Risk Scores')
+@section('title', 'ROPA Records')
 
 @section('content')
-<div class="container mx-auto p-6">
-
-    <h2 class="text-2xl font-bold mb-6 text-indigo-700 flex items-center">
-        <i data-feather="shield" class="w-6 h-6 mr-2"></i> ROPA Risk Scores
-    </h2>
-
-    <!-- Success Message -->
-    @if(session('success'))
-        <div class="bg-green-100 text-green-700 p-3 rounded mb-4 flex items-center">
-            <i data-feather="check-circle" class="w-5 h-5 mr-2"></i> {{ session('success') }}
-        </div>
-    @endif
-
-    <!-- Add Risk Score Button -->
-    <div class="flex items-center mb-4 space-x-2">
-        <a href="{{ route('risk_scores.create') }}" 
-           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
-            <i data-feather="plus-circle" class="w-5 h-5 mr-2"></i> Add Risk Score
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="text-primary">ROPA Records</h3>
+        <a href="{{ route('ropas.create') }}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Add New ROPA
         </a>
     </div>
 
-    <!-- Risk Scores Table -->
-    <div class="overflow-x-auto">
-        <table class="w-full border mt-4 text-sm">
-            <thead class="bg-gray-200">
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-light">
                 <tr>
-                    <th class="border p-2">ID</th>
-                    <th class="border p-2">ROPA</th>
-                    <th class="border p-2">Risk Score</th>
-                    <th class="border p-2">Risk Level</th>
-                    <th class="border p-2">Reviewed By</th>
-                    <th class="border p-2">Date</th>
-                    <th class="border p-2">Actions</th>
+                    <th>id</th>
+                    <th>Organisation</th>
+                    <th>Department</th>
+                    <th>Status</th>
+                    <th>Date Submitted</th>
+                    <th>Risk Score (%)</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($riskScores as $score)
+                @forelse($ropas as $ropa)
                     <tr>
-                        <td class="border p-2">{{ $score->id }}</td>
-                        <td class="border p-2">{{ $score->ropa->organisation_name ?? 'N/A' }}</td>
-                        <td class="border p-2">{{ $score->risk_score ?? 'N/A' }}</td>
-                        <td class="border p-2">{{ $score->review_status ?? 'N/A' }}</td>
-                        <td class="border p-2">{{ $score->reviewed_by ?? 'N/A' }}</td>
-                        <td class="border p-2">{{ $score->created_at->format('d M Y') }}</td>
-                        <td class="border p-2 flex items-center space-x-2">
-                            <a href="{{ route('risk_scores.edit', $score->id) }}"
-                               class="text-yellow-600 flex items-center hover:text-yellow-800">
-                                <i data-feather="edit" class="w-4 h-4 mr-1"></i> Edit
+                        <td>{{ $ropa->id }}</td>
+                        <td>{{ $ropa->organisation_name }}</td>
+                        <td>{{ $ropa->department_name ?? $ropa->other_department }}</td>
+                        <td>{{ $ropa->status }}</td>
+                        <td>{{ $ropa->date_submitted?->format('Y-m-d') ?? 'N/A' }}</td>
+                        <td>{{ $ropa->calculateRiskScore() }}%</td>
+                        <td>
+                            <a href="{{ route('ropas.weights.edit', $ropa->id) }}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-sliders"></i> Manage Weights
                             </a>
-                            <form action="{{ route('risk_scores.destroy', $score->id) }}" method="POST" class="inline"
-                                  onsubmit="return confirm('Are you sure you want to delete this score?')">
+                            <a href="{{ route('ropas.edit', $ropa->id) }}" class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <form action="{{ route('ropas.destroy', $ropa->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="text-red-600 flex items-center hover:text-red-800">
-                                    <i data-feather="trash-2" class="w-4 h-4 mr-1"></i> Delete
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Are you sure?')">
+                                    <i class="bi bi-trash"></i> Delete
                                 </button>
                             </form>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center text-gray-500 p-4">No risk scores found.</td>
+                        <td colspan="7" class="text-center">No ROPA records found.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
-    <!-- Pagination -->
     <div class="mt-3">
-        {{ $riskScores->links() }}
+        {{ $ropas->links() }}
     </div>
 </div>
-
-<script>
-    feather.replace();
-</script>
 @endsection

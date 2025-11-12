@@ -5,9 +5,21 @@
 @section('content')
 <div class="container mx-auto p-4 sm:p-6">
     <!-- Page Header -->
-    <h2 class="text-2xl font-bold mb-6 text-indigo-700 flex items-center">
-        <i data-feather="users" class="w-6 h-6 mr-2"></i> User Management
-    </h2>
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+        <h2 class="text-2xl font-bold text-indigo-700 flex items-center">
+            <i data-feather="users" class="w-6 h-6 mr-2"></i> User Management
+        </h2>
+
+        
+<!-- Create User Button -->
+<div class="flex justify-end mb-4">
+    <a href="{{ route('admin.users.create') }}"
+       class="mt-3 sm:mt-0 inline-flex items-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+        <i data-feather="user-plus" class="w-4 h-4 mr-2"></i> Create User
+    </a>
+</div>
+
+    </div>
 
     <!-- Success / Error Messages -->
     @if(session('success'))
@@ -58,15 +70,15 @@
             </div>
         </div>
 
-        <!-- Job Titles -->
+        <!-- Active Accounts -->
         <div class="bg-white shadow-md rounded-lg p-4 flex items-center space-x-4 border-l-4 border-red-500">
             <div class="p-2 sm:p-3 bg-red-100 rounded-full">
-                <i data-feather="award" class="w-5 h-5 sm:w-6 sm:h-6 text-red-500"></i>
+                <i data-feather="activity" class="w-5 h-5 sm:w-6 sm:h-6 text-red-500"></i>
             </div>
             <div>
                 <h3 class="text-xs sm:text-sm font-semibold text-gray-500 uppercase">Active Accounts</h3>
                 <p class="text-lg sm:text-xl font-bold text-gray-800">
-                  {{ \App\Models\User::where('active', 1)->count() }}
+                    {{ \App\Models\User::where('active', 1)->count() }}
                 </p>
             </div>
         </div>
@@ -98,7 +110,6 @@
                     <th class="py-3 px-4 text-left whitespace-nowrap">Email</th>
                     <th class="py-3 px-4 text-left">Type</th>
                     <th class="py-3 px-4 text-left">Department</th>
-                   
                     <th class="py-3 px-4 text-left">Status</th>
                     <th class="py-3 px-4 text-left">Created</th>
                     <th class="py-3 px-4 text-center">Actions</th>
@@ -115,7 +126,6 @@
                             </span>
                         </td>
                         <td class="py-3 px-4">{{ $user->department ?? '—' }}</td>
-                        
                         <td class="py-3 px-4">
                             <span class="px-2 py-1 text-xs sm:text-sm rounded-full {{ $user->active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                 {{ $user->active ? 'Active' : 'Deactivated' }}

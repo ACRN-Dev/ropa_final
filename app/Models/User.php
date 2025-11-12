@@ -19,10 +19,13 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'user_type',    // 0 = user, 1 = admin
-        'department',   // nullable
-        'job_title',    // nullable
+        'user_type',          // 0 = user, 1 = admin
+        'department',         // nullable
+        'job_title',          // nullable
         'active', 
+        'two_factor_enabled',
+        'two_factor_code',
+        'two_factor_expires_at', // added 2FA
     ];
 
     /**
@@ -45,6 +48,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'two_factor_enabled' => 'boolean', 
+            'two_factor_expires_at' => 'datetime',// cast 2FA to boolean
         ];
     }
 
@@ -56,15 +61,19 @@ class User extends Authenticatable
         return $this->user_type === 1;
     }
 
+    /**
+     * Check if user is active
+     */
     public function isActive(): bool
-{
-    return $this->active;
-}
+    {
+        return $this->active;
+    }
 
-  public function ropas()
-   {
-          return $this->hasMany(Ropa::class);
-   }
-
-
+    /**
+     * Relationship: User has many ROPAs
+     */
+    public function ropas()
+    {
+        return $this->hasMany(Ropa::class);
+    }
 }

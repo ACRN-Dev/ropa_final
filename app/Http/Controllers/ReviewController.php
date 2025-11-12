@@ -12,9 +12,7 @@ class ReviewController extends Controller
 {
     public function index()
     {
-        // Display all ROPA records with their reviews
-        $ropas = Ropa::with('reviews')->paginate(10);
-        $reviews = Review::with('ropa')->latest()->paginate(10);
+        
         return view('admindashboard.review.index', compact('ropas','reviews'));
     }
 

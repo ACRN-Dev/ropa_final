@@ -28,80 +28,136 @@
         </div>
     @endif
 
-    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-        <form method="POST" action="{{ route('ropas.update', $ropa->id) }}">
+    <div class="bg-white shadow rounded-lg p-6">
+        <form method="POST" action="{{ route('ropa.update', $ropa->id) }}">
             @csrf
             @method('PATCH')
 
-            <!-- Controller / Department -->
-            <div class="mb-4">
-                <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Controller / Department</label>
-                <input type="text" name="controller_department" value="{{ old('controller_department', $ropa->controller_department) }}" class="form-input w-full" />
-            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Organisation -->
+                <div>
+                    <label class="block font-semibold text-gray-700 mb-1">Organisation Name</label>
+                    <input type="text" name="organisation_name" value="{{ old('organisation_name', $ropa->organisation_name) }}"
+                        class="w-full border border-gray-400 bg-gray-50 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                </div>
 
-            <!-- Processing Activity Name -->
-            <div class="mb-4">
-                <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Processing Activity Name</label>
-                <input type="text" name="processing_activity_name" value="{{ old('processing_activity_name', $ropa->processing_activity_name) }}" class="form-input w-full" />
-            </div>
+                <!-- Department -->
+                <div>
+                    <label class="block font-semibold text-gray-700 mb-1">Department Name</label>
+                    <input type="text" name="department_name" value="{{ old('department_name', $ropa->department_name) }}"
+                        class="w-full border border-gray-400 bg-gray-50 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                </div>
 
-            <!-- Purpose of Processing -->
-            <div class="mb-4">
-                <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Purpose of Processing</label>
-                <textarea name="purpose_of_processing" rows="3" class="form-textarea w-full">{{ old('purpose_of_processing', $ropa->purpose_of_processing) }}</textarea>
-            </div>
+                <!-- Other Department -->
+                <div>
+                    <label class="block font-semibold text-gray-700 mb-1">Other Department</label>
+                    <input type="text" name="other_department" value="{{ old('other_department', $ropa->other_department) }}"
+                        class="w-full border border-gray-400 bg-gray-50 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                </div>
 
-            <!-- Categories of Data Subjects -->
-            <div class="mb-4">
-                <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Categories of Data Subjects</label>
-                <textarea name="categories_of_data_subjects" rows="3" class="form-textarea w-full">{{ old('categories_of_data_subjects', $ropa->categories_of_data_subjects) }}</textarea>
-            </div>
+                <!-- Status -->
+                <div>
+                    <label class="block font-semibold text-gray-700 mb-1">Status</label>
+                    <input type="text" name="status" value="{{ old('status', $ropa->status) }}"
+                        class="w-full border border-gray-400 bg-gray-50 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                </div>
 
-            <!-- Categories of Personal Data -->
-            <div class="mb-4">
-                <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Categories of Personal Data</label>
-                <textarea name="categories_of_personal_data" rows="3" class="form-textarea w-full">{{ old('categories_of_personal_data', $ropa->categories_of_personal_data) }}</textarea>
-            </div>
+                <!-- Date Submitted -->
+                <div>
+                    <label class="block font-semibold text-gray-700 mb-1">Date Submitted</label>
+                    <input type="date" name="date_submitted" value="{{ old('date_submitted', $ropa->date_submitted ? $ropa->date_submitted->format('Y-m-d') : '') }}"
+                        class="w-full border border-gray-400 bg-gray-50 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                </div>
 
-            <!-- Recipients of Data -->
-            <div class="mb-4">
-                <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Recipients of Data</label>
-                <textarea name="recipients_of_data" rows="3" class="form-textarea w-full">{{ old('recipients_of_data', $ropa->recipients_of_data) }}</textarea>
-            </div>
+                <!-- Information Shared -->
+                <div class="flex items-center space-x-2 mt-4">
+                    <input type="checkbox" name="information_shared" value="1" {{ old('information_shared', $ropa->information_shared) ? 'checked' : '' }} />
+                    <label class="font-semibold text-gray-700">Information Shared</label>
+                </div>
 
-            <!-- Transfer to Third Countries -->
-            <div class="mb-4">
-                <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Transfer to Third Countries</label>
-                <input type="text" name="transfer_to_third_countries" value="{{ old('transfer_to_third_countries', $ropa->transfer_to_third_countries) }}" class="form-input w-full" />
-            </div>
+                <!-- Information Nature -->
+                <div class="md:col-span-2">
+                    <label class="block font-semibold text-gray-700 mb-1">Information Nature</label>
+                    <textarea name="information_nature" rows="3"
+                        class="w-full border border-gray-400 bg-gray-50 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500">{{ old('information_nature', $ropa->information_nature) }}</textarea>
+                </div>
 
-            <!-- Retention Period -->
-            <div class="mb-4">
-                <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Retention Period</label>
-                <input type="text" name="retention_period" value="{{ old('retention_period', $ropa->retention_period) }}" class="form-input w-full" />
-            </div>
+                <!-- Outsourced Processing -->
+                <div class="flex items-center space-x-2 mt-4">
+                    <input type="checkbox" name="outsourced_processing" value="1" {{ old('outsourced_processing', $ropa->outsourced_processing) ? 'checked' : '' }} />
+                    <label class="font-semibold text-gray-700">Outsourced Processing</label>
+                </div>
 
-            <!-- Security Measures -->
-            <div class="mb-4">
-                <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Security Measures</label>
-                <textarea name="security_measures" rows="3" class="form-textarea w-full">{{ old('security_measures', $ropa->security_measures) }}</textarea>
-            </div>
+                <!-- Processor -->
+                <div>
+                    <label class="block font-semibold text-gray-700 mb-1">Processor</label>
+                    <input type="text" name="processor" value="{{ old('processor', $ropa->processor) }}"
+                        class="w-full border border-gray-400 bg-gray-50 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                </div>
 
-            <!-- Data Protection Officer -->
-            <div class="mb-4">
-                <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Data Protection Officer</label>
-                <input type="text" name="data_protection_officer" value="{{ old('data_protection_officer', $ropa->data_protection_officer) }}" class="form-input w-full" />
-            </div>
+                <!-- Transborder Processing -->
+                <div class="flex items-center space-x-2 mt-4">
+                    <input type="checkbox" name="transborder_processing" value="1" {{ old('transborder_processing', $ropa->transborder_processing) ? 'checked' : '' }} />
+                    <label class="font-semibold text-gray-700">Transborder Processing</label>
+                </div>
 
-            <!-- Date of Entry -->
-            <div class="mb-4">
-                <label class="block font-semibold text-gray-700 dark:text-gray-300 mb-1">Date of Entry</label>
-                <input type="date" name="date_of_entry" value="{{ old('date_of_entry', $ropa->date_of_entry ? $ropa->date_of_entry->format('Y-m-d') : '') }}" class="form-input w-full" />
+                <!-- Country -->
+                <div>
+                    <label class="block font-semibold text-gray-700 mb-1">Country</label>
+                    <input type="text" name="country" value="{{ old('country', $ropa->country) }}"
+                        class="w-full border border-gray-400 bg-gray-50 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                </div>
+
+                <!-- Lawful Basis -->
+                <div class="md:col-span-2">
+                    <label class="block font-semibold text-gray-700 mb-1">Lawful Basis</label>
+                    <select name="lawful_basis[]" multiple
+                        class="w-full border border-gray-400 bg-gray-50 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        @foreach($lawfulOptions as $option)
+                            <option value="{{ $option }}" {{ in_array($option, old('lawful_basis', $ropa->lawful_basis ?? [])) ? 'selected' : '' }}>{{ $option }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Retention Period -->
+                <div>
+                    <label class="block font-semibold text-gray-700 mb-1">Retention Period (Years)</label>
+                    <input type="number" name="retention_period_years" value="{{ old('retention_period_years', $ropa->retention_period_years) }}"
+                        class="w-full border border-gray-400 bg-gray-50 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                </div>
+
+                <!-- Retention Rationale -->
+                <div class="md:col-span-2">
+                    <label class="block font-semibold text-gray-700 mb-1">Retention Rationale</label>
+                    <textarea name="retention_rationale" rows="3"
+                        class="w-full border border-gray-400 bg-gray-50 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500">{{ old('retention_rationale', $ropa->retention_rationale) }}</textarea>
+                </div>
+
+                <!-- Users Count -->
+                <div>
+                    <label class="block font-semibold text-gray-700 mb-1">Users Count</label>
+                    <input type="number" name="users_count" value="{{ old('users_count', $ropa->users_count) }}"
+                        class="w-full border border-gray-400 bg-gray-50 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                </div>
+
+                <!-- Access Control -->
+                <div class="flex items-center space-x-2 mt-4">
+                    <input type="checkbox" name="access_control" value="1" {{ old('access_control', $ropa->access_control) ? 'checked' : '' }} />
+                    <label class="font-semibold text-gray-700">Access Control</label>
+                </div>
+
+                <!-- Personal Data Category -->
+                <div class="md:col-span-2">
+                    <label class="block font-semibold text-gray-700 mb-1">Categories of Personal Data</label>
+                    <textarea name="personal_data_category[]" rows="3"
+                        class="w-full border border-gray-400 bg-gray-50 rounded-md p-2 focus:ring-indigo-500 focus:border-indigo-500">{{ old('personal_data_category') ? implode(', ', old('personal_data_category')) : implode(', ', $ropa->personal_data_category ?? []) }}</textarea>
+                    <p class="text-gray-500 text-sm mt-1">Enter multiple categories separated by commas.</p>
+                </div>
             </div>
 
             <!-- Actions -->
-            <div class="flex justify-end space-x-2">
-                <a href="{{ route('ropas.index') }}" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 flex items-center">
+            <div class="mt-6 flex justify-end space-x-2">
+                <a href="{{ route('ropa.index') }}" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 flex items-center">
                     <i data-feather="arrow-left" class="w-4 h-4 mr-1"></i> Cancel
                 </a>
 
