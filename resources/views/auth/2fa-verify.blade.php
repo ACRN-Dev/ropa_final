@@ -36,7 +36,7 @@
                     required autofocus />
                 <x-input-error :messages="$errors->get('two_factor_code')" class="mt-1 text-red-600" />
             </div>
-
+<br>
             <!-- Verify Button -->
             <x-primary-button class="w-full bg-indigo-600 hover:bg-indigo-700 text-white focus:ring-indigo-500">
                 {{ __('Verify') }}

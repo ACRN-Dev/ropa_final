@@ -5,8 +5,8 @@
 @section('content')
 <div class="container mx-auto p-6">
     <!-- Page Header -->
-    <h2 class="text-2xl font-bold mb-6 text-indigo-700 flex items-center">
-        <i data-feather="eye" class="w-6 h-6 mr-2"></i> View User
+    <h2 class="text-2xl font-bold mb-6 text-orange-500 flex items-center">
+        <i data-feather="eye" class="w-6 h-6 mr-2 text-orange-500"></i> View User
     </h2>
 
     <!-- User Details Card -->
@@ -39,7 +39,7 @@
         <div>
             <h3 class="text-sm font-semibold text-gray-500 mb-1">User Type</h3>
             @if($user->user_type == 1)
-                <span class="text-green-600 font-semibold">Admin</span>
+                <span class="text-orange-600 font-semibold">Admin</span>
             @else
                 <span class="text-gray-700">User</span>
             @endif
@@ -63,8 +63,8 @@
 
         <!-- Back Button -->
         <div class="pt-4">
-            <a href="{{ route('admin.users.index') }}" class="flex items-center text-gray-600 hover:text-indigo-700">
-                <i data-feather="arrow-left" class="w-4 h-4 mr-2"></i> Back to Users
+            <a href="{{ route('admin.users.index') }}" class="flex items-center text-gray-600 hover:text-orange-500">
+                <i data-feather="arrow-left" class="w-4 h-4 mr-2 text-orange-500"></i> Back to Users
             </a>
         </div>
     </div>

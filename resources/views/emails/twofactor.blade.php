@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Two-Factor Authentication Status</title>
+    <title>Your Two-Factor Code</title>
     <style>
         body {
             font-family: "Segoe UI", Arial, sans-serif;
-            background-color: #f9f9f9;
+            background-color: #fff7f0;
             color: #333;
             margin: 0;
             padding: 0;
@@ -14,7 +14,7 @@
 
         .container {
             max-width: 600px;
-            background: #fff;
+            background: #ffffff;
             margin: 40px auto;
             padding: 30px;
             border-radius: 10px;
@@ -23,13 +23,23 @@
         }
 
         .logo {
-            max-width: 150px;
+            max-width: 120px;
             margin-bottom: 20px;
         }
 
         h1 {
-            color: #2b2b2b;
-            text-align: center;
+            color: #ff8800;
+        }
+
+        .code {
+            display: inline-block;
+            background: #ff8800;
+            color: #fff;
+            font-size: 28px;
+            letter-spacing: 4px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            margin: 20px 0;
         }
 
         p {
@@ -38,50 +48,35 @@
         }
 
         footer {
-            background-color: #ff8800; /* Orange footer */
+            background-color: #ff8800;
             color: #fff;
             text-align: center;
             padding: 15px 0;
             margin-top: 30px;
-            border-top: 2px solid #e67300;
             font-weight: 600;
-        }
-
-        footer a {
-            color: #fff;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Embedded Logo -->
-        
+        <!-- ACRN Logo -->
+        <img src="{{ $message->embed(public_path('logo.jpg')) }}" alt="ACRN Logo" class="logo">
 
-        <h1>Two-Factor Authentication Update</h1>
+        <h1>Two-Factor Authentication Code</h1>
 
         <p>Hello <strong>{{ $user->name }}</strong>,</p>
 
-        <p>Your account has 
-            <strong style="color: {{ $enabled ? '#28a745' : '#dc3545' }}">
-                {{ $enabled ? 'enabled' : 'disabled' }}
-            </strong> 
-            Two-Factor Authentication (2FA).
-        </p>
+        <p>Please use the verification code below to complete your login:</p>
 
-        <p>If you did not make this change, please contact support immediately.</p>
+        <div class="code">{{ $code }}</div>
+
+        <p>This code will expire in 30 minutes. If you did not request this code, please ignore this email.</p>
 
         <p>Thank you,<br><strong>ACRN Data Protection Team</strong></p>
     </div>
 
     <footer>
-        &copy; {{ date('Y') }} ACRN Data Protection | 
-        <a href="mailto:support@acrn.com">support@acrn.com</a>
+        &copy; {{ date('Y') }} ACRN Data Protection | support@acrn.com
     </footer>
 </body>
 </html>

@@ -11,71 +11,64 @@
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
 
 <div class="flex min-h-screen">
-    <aside class="w-64 bg-indigo-900 text-gray-200 p-4 flex flex-col items-center">
+
+    <!-- ORANGE-500 SIDEBAR -->
+    <aside class="w-64 bg-orange-500 text-white p-4 flex flex-col items-center">
+
+        <!-- Logo -->
         <div class="mb-6">
             <img src="{{ asset('favicon.png') }}" alt="Logo" class="w-24 h-24 rounded-full shadow-lg">
         </div>
 
         <ul class="w-full">
+
             <li class="mb-2">
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center py-2 px-3 rounded hover:bg-indigo-600">
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center py-2 px-3 rounded hover:bg-orange-400">
                     <i data-feather="home" class="w-5 h-5 mr-2"></i> Dashboard
                 </a>
             </li>
 
             <li class="mb-2">
-              <a href="{{ route('admin.ropa.index') }}" class="flex items-center py-2 px-3 rounded hover:bg-indigo-600">
-                <i data-feather="file-text" class="w-5 h-5 mr-2"></i>  Assessments
-            </a>
+                <a href="{{ route('admin.ropa.index') }}" class="flex items-center py-2 px-3 rounded hover:bg-orange-400">
+                    <i data-feather="file-text" class="w-5 h-5 mr-2"></i> Assessments
+                </a>
             </li>
 
+            <li class="mb-2">
+                <a href="{{ route('admin.analytics') }}" class="flex items-center py-2 px-3 rounded hover:bg-orange-400">
+                    <i data-feather="bar-chart-2" class="w-5 h-5 mr-2"></i> Analytics
+                </a>
+            </li>
 
+            <li class="mb-2">
+                <a href="{{ route('risk_scores.index') }}" class="flex items-center py-2 px-3 rounded hover:bg-orange-400">
+                    <i data-feather="shield" class="w-5 h-5 mr-2"></i> Scoring Management
+                </a>
+            </li>
 
+            <li class="mb-2">
+                <a href="{{ route('admin.users.index') }}" class="flex items-center py-2 px-3 rounded hover:bg-orange-400">
+                    <i data-feather="users" class="w-5 h-5 mr-2"></i> Manage Users
+                </a>
+            </li>
 
+            <li class="mb-2">
+                <a href="{{ route('activities.index') }}" class="flex items-center py-2 px-3 rounded hover:bg-orange-400">
+                    <i data-feather="clipboard" class="w-5 h-5 mr-2"></i> System Logs
+                </a>
+            </li>
 
-
-           
-<li class="mb-2">
-    <a href="{{ route('admin.analytics') }}" class="flex items-center py-2 px-3 rounded hover:bg-indigo-600">
-        <i data-feather="bar-chart-2" class="w-5 h-5 mr-2"></i>Analytics
-    </a>
-</li>
-
-
- <li class="mb-2">
-    <a href="{{ route('risk_scores.index') }}" class="flex items-center py-2 px-3 rounded hover:bg-indigo-600">
-        <i data-feather="shield" class="w-5 h-5 mr-2"></i> Scoring Management
-    </a>
-</li>
-
-
-
-
-<li class="mb-2">
-    <a href="{{ route('admin.users.index') }}" class="flex items-center py-2 px-3 rounded hover:bg-indigo-600">
-        <i data-feather="users" class="w-5 h-5 mr-2"></i>Manage Users
-    </a>
-</li>
-
-<li class="mb-2">
-    <a href="{{ route('activities.index') }}" class="flex items-center py-2 px-3 rounded hover:bg-indigo-600">
-        <i data-feather="clipboard" class="w-5 h-5 mr-2"></i> System Logs
-    </a>
-</li>
-
-
-
-<li class="mb-2">
-    <form method="POST" action="{{ route('logout') }}">
-        @csrf
-        <button type="submit" class="w-full flex items-center py-2 px-3 rounded hover:bg-indigo-600 text-left">
-            <i data-feather="log-out" class="w-5 h-5 mr-2"></i> Sign Out
-        </button>
-    </form>
-</li>
-
+            <li class="mb-2">
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="w-full flex items-center py-2 px-3 rounded hover:bg-orange-400 text-left">
+                        <i data-feather="log-out" class="w-5 h-5 mr-2"></i> Sign Out
+                    </button>
+                </form>
+            </li>
 
         </ul>
+
     </aside>
 
     <main class="flex-1 p-6">
@@ -83,6 +76,9 @@
     </main>
 </div>
 
-<script> feather.replace() </script>
+<script>
+    feather.replace();
+</script>
+
 </body>
 </html>

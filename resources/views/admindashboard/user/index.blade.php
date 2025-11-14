@@ -6,19 +6,17 @@
 <div class="container mx-auto p-4 sm:p-6">
     <!-- Page Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <h2 class="text-2xl font-bold text-indigo-700 flex items-center">
+        <h2 class="text-2xl font-bold text-orange-500 flex items-center">
             <i data-feather="users" class="w-6 h-6 mr-2"></i> User Management
         </h2>
 
-        
-<!-- Create User Button -->
-<div class="flex justify-end mb-4">
-    <a href="{{ route('admin.users.create') }}"
-       class="mt-3 sm:mt-0 inline-flex items-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
-        <i data-feather="user-plus" class="w-4 h-4 mr-2"></i> Create User
-    </a>
-</div>
-
+        <!-- Create User Button -->
+        <div class="flex justify-end mb-4">
+            <a href="{{ route('admin.users.create') }}"
+               class="mt-3 sm:mt-0 inline-flex items-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                <i data-feather="user-plus" class="w-4 h-4 mr-2"></i> Create User
+            </a>
+        </div>
     </div>
 
     <!-- Success / Error Messages -->
@@ -36,9 +34,9 @@
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
         <!-- Total Users -->
-        <div class="bg-white shadow-md rounded-lg p-4 flex items-center space-x-4 border-l-4 border-indigo-600">
-            <div class="p-2 sm:p-3 bg-indigo-100 rounded-full">
-                <i data-feather="users" class="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600"></i>
+        <div class="bg-white shadow-md rounded-lg p-4 flex items-center space-x-4 border-l-4 border-orange-500">
+            <div class="p-2 sm:p-3 bg-orange-100 rounded-full">
+                <i data-feather="users" class="w-5 h-5 sm:w-6 sm:h-6 text-orange-500"></i>
             </div>
             <div>
                 <h3 class="text-xs sm:text-sm font-semibold text-gray-500 uppercase">Total Users</h3>
@@ -91,11 +89,11 @@
             name="search" 
             value="{{ request('search') }}" 
             placeholder="Search by name, email, or department..." 
-            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm sm:text-base"
+            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none text-sm sm:text-base"
         >
         <button 
             type="submit" 
-            class="flex items-center justify-center bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm sm:text-base"
+            class="flex items-center justify-center bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition text-sm sm:text-base"
         >
             <i data-feather="search" class="w-4 h-4 mr-1"></i> Search
         </button>
@@ -104,7 +102,7 @@
     <!-- Users Table -->
     <div class="overflow-x-auto bg-white rounded-lg shadow-md">
         <table class="min-w-full table-auto border-collapse text-sm sm:text-base">
-            <thead class="bg-indigo-700 text-white">
+            <thead class="bg-orange-500 text-white">
                 <tr>
                     <th class="py-3 px-4 text-left whitespace-nowrap">Name</th>
                     <th class="py-3 px-4 text-left whitespace-nowrap">Email</th>
@@ -135,12 +133,12 @@
                         <td class="py-3 px-4">
                             <div class="flex justify-center space-x-2 sm:space-x-3">
                                 <!-- View -->
-                                <a href="{{ route('admin.users.show', $user->id) }}" class="text-blue-600 hover:text-blue-800" title="View">
+                                <a href="{{ route('admin.users.show', $user->id) }}" class="text-orange-500 hover:text-orange-600" title="View">
                                     <i data-feather="eye"></i>
                                 </a>
 
                                 <!-- Edit -->
-                                <a href="{{ route('admin.users.edit', $user->id) }}" class="text-yellow-600 hover:text-yellow-800" title="Edit">
+                                <a href="{{ route('admin.users.edit', $user->id) }}" class="text-orange-400 hover:text-orange-500" title="Edit">
                                     <i data-feather="edit"></i>
                                 </a>
 

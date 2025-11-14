@@ -32,10 +32,13 @@ class TwoFactorCode extends Notification
      * Get the mail representation of the notification.
      */
     public function toMail($notifiable)
-    {
-        return (new MailMessage)
-                    ->subject('Your 2FA Code')
-                    ->line('Your two-factor authentication code is: ' . $this->code)
-                    ->line('This code will expire in 30 minutes.');
-    }
+{
+    return (new MailMessage)
+        ->subject('Your Two-Factor Authentication Code')
+        ->view('emails.twofactor', [
+            'user' => $notifiable,
+            'code' => $this->code,
+        ]);
+}
+
 }

@@ -5,8 +5,8 @@
 @section('content')
 <div class="container mx-auto p-6">
     <!-- Page Header -->
-    <h2 class="text-2xl font-bold mb-6 text-indigo-700 flex items-center">
-        <i data-feather="edit" class="w-6 h-6 mr-2"></i> Edit User
+    <h2 class="text-2xl font-bold mb-6 text-orange-500 flex items-center">
+        <i data-feather="edit" class="w-6 h-6 mr-2 text-orange-500"></i> Edit User
     </h2>
 
     <!-- Success / Error Messages -->
@@ -40,7 +40,7 @@
                     name="name" 
                     id="name" 
                     value="{{ old('name', $user->name) }}" 
-                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
                     required
                 >
             </div>
@@ -53,7 +53,7 @@
                     name="email" 
                     id="email" 
                     value="{{ old('email', $user->email) }}" 
-                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
                     required
                 >
             </div>
@@ -67,7 +67,7 @@
                     id="department" 
                     value="{{ old('department', $user->department) }}" 
                     placeholder="Enter department (optional)"
-                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
                 >
             </div>
 
@@ -80,7 +80,7 @@
                     id="job_title" 
                     value="{{ old('job_title', $user->job_title) }}" 
                     placeholder="Enter job title (optional)"
-                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
                 >
             </div>
 
@@ -90,7 +90,7 @@
                 <select 
                     name="user_type" 
                     id="user_type" 
-                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
                     required
                 >
                     <option value="0" {{ old('user_type', $user->user_type) == 0 ? 'selected' : '' }}>User</option>
@@ -104,7 +104,7 @@
                 <select 
                     name="active" 
                     id="active" 
-                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
                     required
                 >
                     <option value="1" {{ $user->active ? 'selected' : '' }}>Active</option>
@@ -114,13 +114,13 @@
 
             <!-- Buttons -->
             <div class="flex justify-between items-center pt-4">
-                <a href="{{ route('admin.users.index') }}" class="flex items-center text-gray-600 hover:text-indigo-700">
-                    <i data-feather="arrow-left" class="w-4 h-4 mr-2"></i> Back to Users
+                <a href="{{ route('admin.users.index') }}" class="flex items-center text-gray-600 hover:text-orange-500">
+                    <i data-feather="arrow-left" class="w-4 h-4 mr-2 text-orange-500"></i> Back to Users
                 </a>
 
                 <button 
                     type="submit" 
-                    class="flex items-center bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition"
+                    class="flex items-center bg-orange-500 text-white px-5 py-2 rounded-lg hover:bg-orange-600 transition"
                 >
                     <i data-feather="save" class="w-4 h-4 mr-2"></i> Save Changes
                 </button>
