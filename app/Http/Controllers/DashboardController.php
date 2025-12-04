@@ -64,17 +64,21 @@ public function dashboard()
         ->take(5)
         ->get();
 
-    // Only this user's reviews
-    $reviews = Review::where('user_id', $user->id)->get();
+    // Get reviews for all ROPAs that belong to this user
+    $reviews = Review::whereIn('ropa_id', function ($q) use ($user) {
+        $q->select('id')
+          ->from('ropas')
+          ->where('user_id', $user->id);
+    })->get();
 
     // Prevent divide-by-zero
     $total = max($reviews->count(), 1);
 
-    // Correct: use total_score (NOT score)
-    $critical = $reviews->where('total_score', '<=', 50)->count();
-    $high     = $reviews->where('total_score', '>', 50)->where('total_score', '<=', 100)->count();
-    $medium   = $reviews->where('total_score', '>', 100)->where('total_score', '<=', 160)->count();
-    $low      = $reviews->where('total_score', '>', 160)->count();
+    // Count by categories
+    $critical = $reviews->filter(fn($r) => $r->total_score <= 50)->count();
+    $high     = $reviews->filter(fn($r) => $r->total_score > 50 && $r->total_score <= 100)->count();
+    $medium   = $reviews->filter(fn($r) => $r->total_score > 100 && $r->total_score <= 160)->count();
+    $low      = $reviews->filter(fn($r) => $r->total_score > 160)->count();
 
     // Percentages
     $criticalRisk = round(($critical / $total) * 100, 1);
@@ -92,6 +96,7 @@ public function dashboard()
         'reviews'
     ));
 }
+
 
 
 

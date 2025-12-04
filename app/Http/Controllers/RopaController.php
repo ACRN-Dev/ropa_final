@@ -6,8 +6,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\Review;
+use App\Mail\ShareRopaMail;
+use Illuminate\Support\Facades\Mail;
 use Spatie\SimpleExcel\SimpleExcelWriter;
 use App\Notifications\NewRopaSubmitted;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+
+
+
 
 class RopaController extends Controller
 {
@@ -327,6 +334,119 @@ private function safeList($value)
     $flat = collect($value)->flatten()->filter()->all();
 
     return implode(', ', $flat);
+}
+
+
+
+public function print($id)
+{
+    // Fetch ropa with all relationships if needed
+    $ropa = Ropa::findOrFail($id);
+
+    // Convert array fields to readable comma-separated strings
+    $formatArray = function ($value) {
+        if (is_array($value)) return implode(', ', $value);
+        return $value ?? 'N/A';
+    };
+
+    // Prepare data for the print view
+    $data = [
+        'organisation_name'           => $ropa->organisation_name,
+        'other_organisation_name'     => $ropa->other_organisation_name,
+        'department'                  => $ropa->department,
+        'other_department'            => $ropa->other_department,
+
+        'processes'                   => $formatArray($ropa->processes),
+        'data_sources'                => $formatArray($ropa->data_sources),
+        'data_sources_other'          => $formatArray($ropa->data_sources_other),
+        'data_formats'                => $formatArray($ropa->data_formats),
+        'data_formats_other'          => $formatArray($ropa->data_formats_other),
+        'information_nature'          => $formatArray($ropa->information_nature),
+        'personal_data_categories'    => $formatArray($ropa->personal_data_categories),
+        'personal_data_categories_other' => $formatArray($ropa->personal_data_categories_other),
+        'records_count'               => $formatArray($ropa->records_count),
+        'data_volume'                 => $formatArray($ropa->data_volume),
+        'retention_period_years'      => $formatArray($ropa->retention_period_years),
+        'access_estimate'             => $formatArray($ropa->access_estimate),
+        'retention_rationale'         => $formatArray($ropa->retention_rationale),
+
+        'information_shared'          => $ropa->information_shared ? 'Yes' : 'No',
+        'sharing_local'               => $ropa->sharing_local ? 'Yes' : 'No',
+        'sharing_transborder'         => $ropa->sharing_transborder ? 'Yes' : 'No',
+        'local_organizations'         => $formatArray($ropa->local_organizations),
+        'transborder_countries'       => $formatArray($ropa->transborder_countries),
+        'sharing_comment'             => $ropa->sharing_comment ?? 'N/A',
+
+        'access_control'              => $ropa->access_control ? 'Yes' : 'No',
+        'access_measures'             => $formatArray($ropa->access_measures),
+        'technical_measures'          => $formatArray($ropa->technical_measures),
+        'organisational_measures'     => $formatArray($ropa->organisational_measures),
+        'lawful_basis'                => $formatArray($ropa->lawful_basis),
+        'risk_report'                 => $formatArray($ropa->risk_report),
+
+        'created_at'                  => $ropa->created_at->format('d M Y H:i'),
+        'submitted_by'                => optional($ropa->user)->name,
+    ];
+
+    return view('ropa.print', compact('data', 'ropa'));
+}
+
+
+// GET: Show share modal for authenticated user's ROPA
+public function showShareModal($id)
+{
+    $userId = auth()->id();
+
+    // Only fetch ROPA belonging to the authenticated user
+    $ropa = Ropa::where('id', $id)
+                ->where('user_id', $userId)
+                ->firstOrFail();
+
+    return view('modals.share-ropa', compact('ropa'));
+}
+
+
+public function sendEmail(Request $request, $id)
+{
+    $request->validate([
+        'email'   => 'required|email',
+        'cc'      => 'nullable|string',
+        'subject' => 'required|string|max:255',
+        'format'  => 'required|in:pdf,excel',
+    ]);
+
+    $ropa = Ropa::where('id', $id)->where('user_id', auth()->id())->firstOrFail();
+
+    // Clean CC list
+    $ccList = [];
+    if (!empty($request->cc)) {
+        foreach (explode(',', $request->cc) as $email) {
+            $email = trim($email);
+            if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $ccList[] = $email;
+            }
+        }
+    }
+
+    // Generate file based on chosen format
+    $ext = $request->format === 'pdf' ? 'pdf' : 'xlsx';
+    $fileName = "ropa_{$ropa->id}.$ext";
+    $filePath = storage_path("app/$fileName");
+
+    if ($request->format === 'pdf') {
+        $pdf = Pdf::loadView('emails.ropa-pdf', compact('ropa'));
+        $pdf->save($filePath);
+    } else {
+        // Excel export (requires phpoffice/phpspreadsheet and Laravel Excel)
+        Excel::store(new RopaExport($ropa), $fileName); // stores in storage/app
+    }
+
+    // Send email
+    Mail::to($request->email)
+        ->cc($ccList)
+        ->send(new ShareRopaMail($ropa, $request->subject, $filePath, $ccList));
+
+    return back()->with('success', 'ROPA shared successfully!');
 }
 
 

@@ -19,15 +19,9 @@
         <aside class="w-64 bg-orange-600 text-white p-4 flex flex-col items-center fixed left-0 top-0 h-screen overflow-y-auto">
 
             <!-- Logo -->
-            <!-- Logo -->
-<!-- Logo -->
-<!-- Logo -->
-<div class="mb-6">
-    <img src="{{ asset('logo.jpg') }}" alt="Logo" class="w-32 h-20 rounded-lg shadow-md border-2 border-white dark:border-gray-800 object-cover">
-</div>
-
-
-
+            <div class="mb-6">
+                <img src="{{ asset('logo.jpg') }}" alt="Logo" class="w-32 h-20 rounded-lg shadow-md border-2 border-white dark:border-gray-800 object-cover">
+            </div>
 
             <ul class="w-full">
                 <li class="mb-2">
@@ -42,30 +36,17 @@
                     </a>
                 </li>
 
-<li class="mb-2">
-    <a href="" 
-       class="flex items-center py-2 px-3 rounded hover:bg-orange-500 transition-colors duration-200">
-        <i data-feather="check-square" class="w-5 h-5 mr-2"></i> Reviews
-    </a>
-</li>
+                <li class="mb-2">
+                    <a href="" class="flex items-center py-2 px-3 rounded hover:bg-orange-500 transition-colors duration-200">
+                        <i data-feather="check-square" class="w-5 h-5 mr-2"></i> Reviews
+                    </a>
+                </li>
 
-
-<li class="mb-2">
-    <a href="{{ route('ticket.index') }}"
-       class="flex items-center py-2 px-3 rounded hover:bg-orange-500 transition-colors duration-200 w-full text-left">
-        <i data-feather="tag" class="w-5 h-5 mr-2"></i> Add Ticket
-    </a>
-</li>
-
-
-
-
-
-
-
-
-
-
+                <li class="mb-2">
+                    <a href="{{ route('ticket.index') }}" class="flex items-center py-2 px-3 rounded hover:bg-orange-500 transition-colors duration-200 w-full text-left">
+                        <i data-feather="tag" class="w-5 h-5 mr-2"></i> Add Ticket
+                    </a>
+                </li>
 
                 <!-- Account Settings Button -->
                 <li class="mb-2 w-full">
@@ -83,10 +64,22 @@
                     </form>
                 </li>
             </ul>
-        </aside>
+
+
+            
+    <!-- Help Button at the Bottom -->
+    <div class="mt-auto w-full">
+        <a href="" class="w-full flex items-center justify-center py-3 px-3 mb-2 bg-orange-500 hover:bg-orange-1000 rounded-lg shadow">
+            <i data-feather="help-circle" class="w-5 h-5 mr-2"></i> Help
+        </a>
+    </div>
+
+
+</aside>
 
         <!-- Main Content (shifted right so sidebar does not overlap) -->
-        <main class="flex-1 p-6 overflow-auto ml-64">
+        <!-- ★ FIXED HERE: px-0 py-6 (no horizontal padding, vertical padding kept) -->
+        <main class="flex-1 px-0 py-6 overflow-auto ml-64">
             @yield('content')
         </main>
     </div>
