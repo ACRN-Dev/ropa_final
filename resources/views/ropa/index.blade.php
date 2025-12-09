@@ -36,63 +36,66 @@
     <form action="{{ route('ropa.store') }}" method="POST" class="space-y-10">
         @csrf
 
-        <!-- ORGANISATION & DEPARTMENT -->
-        <div class="bg-white p-6 rounded-xl shadow-md">
-            <h2 class="text-xl font-bold mb-4 text-gray-700">Organisation Information</h2>
-            <div class="grid md:grid-cols-2 gap-6">
 
-                <!-- Organisation Name -->
-                <div>
-                    <label class="block font-semibold mb-1">Organisation Name</label>
-                    <select name="organisation_name" id="organisation_name" class="w-full border rounded-lg p-2">
-                        <option value="">-- Select Organisation --</option>
-                        @foreach(['Mutala Trust','Infectious Diseases Research Lab','Clinresco','Other'] as $org)
-                            <option value="{{ $org }}" {{ old('organisation_name') == $org ? 'selected' : '' }}>{{ $org }}</option>
-                        @endforeach
-                    </select>
-                </div>
 
-                <div id="other_organisation_wrapper" class="{{ old('organisation_name') == 'Other' ? '' : 'hidden' }}">
-                    <label class="block font-semibold mb-1">Specify Other Organisation(s)</label>
-                    <div id="other_organisation_container" class="space-y-2">
-                        <input type="text" name="other_organisation_name[]" class="w-full border rounded-lg p-2" placeholder="Enter organisation name">
-                    </div>
-                    <button type="button" id="add_other_organisation" class="mt-2 text-white bg-orange-600 px-3 py-1 rounded hover:bg-orange-700">Add More</button>
-                </div>
 
-                <!-- Department -->
-                <div>
-                    <label class="block font-semibold mb-1">Department</label>
-                    <select name="department" id="department" class="w-full border rounded-lg p-2">
-                        <option value="">-- Select Department --</option>
-                        @foreach([
-                            'Data Protection'=>'Data Protection',
-                            'IT'=>'IT ',
-                            'HR'=>'HR ',
-                            'Community Engagement'=>'Community Engagement ',
-                            'Data & Biostatistics'=>'Data & Biostatistics ',
-                            'Laboratory'=>'Laboratory',
-                            'Pharmacy'=>'Pharmacy ',
-                            'Finance & Administration'=>'Finance & Administration ',
-                            'Clinical Operations (ClinOps)'=>'Clinical Operations (ClinOps) ',
-                            'Project Management'=>'Project Management',
-                            'Legal & Compliance'=>'Legal & Compliance',
-                            'Other'=>'Other'
-                        ] as $key => $label)
-                            <option value="{{ $key }}" {{ old('department') == $key ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
+<!-- ORGANISATION & DEPARTMENT -->
+<div class="bg-white p-6 rounded-xl shadow-md">
+    <h2 class="text-xl font-bold mb-4 text-gray-700">Organisation Information</h2>
 
-                <div id="other_department_wrapper" class="{{ old('department') == 'Other' ? '' : 'hidden' }}">
-                    <label class="block font-semibold mb-1">Specify Other Department(s)</label>
-                    <div id="other_department_container" class="space-y-2">
-                        <input type="text" name="other_department[]" class="w-full border rounded-lg p-2" placeholder="Enter department name">
-                    </div>
-                    <button type="button" id="add_other_department" class="mt-2 text-white bg-orange-600 px-3 py-1 rounded hover:bg-orange-700">Add More</button>
-                </div>
-            </div>
+    <div class="grid md:grid-cols-2 gap-6">
+
+        <!-- Organisation Name -->
+        <div>
+            <label class="block font-semibold mb-1">Organisation Name</label>
+            <select name="organisation_name" id="organisation_name" class="w-full border rounded-lg p-2">
+                <option value="">-- Select Organisation --</option>
+                @foreach(['Mutala Trust','Infectious Diseases Research Lab','Clinresco','Other'] as $org)
+                    <option value="{{ $org }}" {{ old('organisation_name') == $org ? 'selected' : '' }}>
+                        {{ $org }}
+                    </option>
+                @endforeach
+            </select>
         </div>
+
+        <!-- Other Organisation Input -->
+        <div id="other_organisation_wrapper" class="{{ old('organisation_name') == 'Other' ? '' : 'hidden' }}">
+            <label class="block font-semibold mb-1">Specify Other Organisation(s)</label>
+            <div id="other_organisation_container" class="space-y-2">
+                <input type="text" name="other_organisation_name[]" class="w-full border rounded-lg p-2" placeholder="Enter organisation name">
+            </div>
+            <button type="button" id="add_other_organisation" class="mt-2 text-white bg-orange-600 px-3 py-1 rounded hover:bg-orange-700">
+                Add More
+            </button>
+        </div>
+
+        <!-- Department Input -->
+      <!-- Department (Read-Only Input) -->
+<div>
+    <label class="block font-semibold mb-1">Department</label>
+    <input type="text" 
+           name="department" 
+           value="{{ old('department', \App\Models\User::find(auth()->id())->department ?? '') }}" 
+           class="w-full border rounded-lg p-2 bg-gray-100 cursor-not-allowed" 
+           readonly>
+</div>
+
+
+        <!-- Other Department Input -->
+        <div id="other_department_wrapper" class="{{ old('department') == 'Other' ? '' : 'hidden' }}">
+            <label class="block font-semibold mb-1">Specify Other Department(s)</label>
+            <div id="other_department_container" class="space-y-2">
+                <input type="text" name="other_department[]" class="w-full border rounded-lg p-2" placeholder="Enter department name">
+            </div>
+            <button type="button" id="add_other_department" class="mt-2 text-white bg-orange-600 px-3 py-1 rounded hover:bg-orange-700">
+                Add More
+            </button>
+        </div>
+
+    </div>
+</div>
+
+
 
         <!-- PROCESSING INFORMATION -->
         <div class="bg-white p-6 rounded-xl shadow-md">

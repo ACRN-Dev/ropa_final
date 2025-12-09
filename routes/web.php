@@ -168,8 +168,8 @@ Route::patch('/profile/2fa-toggle', [ProfileController::class, 'toggleTwoFactor'
 // Help Page
 Route::get('/help', [App\Http\Controllers\HelpController::class, 'index'])->name('help');
 
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
 
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
     Route::get('/reviews/{id}', [AdminReviewController::class, 'show'])->name('reviews.show');
     Route::put('/reviews/{id}', [AdminReviewController::class, 'update'])->name('reviews.update');

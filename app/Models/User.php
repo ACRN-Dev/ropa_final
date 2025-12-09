@@ -86,4 +86,33 @@ public function reviews()
 }
 
 
+public function scopeFilter($query, $filters)
+{
+    if (!empty($filters['search'])) {
+        $query->where(function($q) use ($filters) {
+            $q->where('name', 'like', "%{$filters['search']}%")
+              ->orWhere('email', 'like', "%{$filters['search']}%");
+        });
+    }
+
+    if (!empty($filters['status'])) {
+        if ($filters['status'] === 'active') {
+            $query->where('active', 1);
+        } elseif ($filters['status'] === 'deactivated') {
+            $query->where('active', 0);
+        }
+    }
+
+    if (isset($filters['user_type']) && $filters['user_type'] !== '') {
+        $query->where('user_type', $filters['user_type']);
+    }
+
+    if (!empty($filters['department'])) {
+        $query->where('department', $filters['department']);
+    }
+
+    return $query;
+}
+
+
 }

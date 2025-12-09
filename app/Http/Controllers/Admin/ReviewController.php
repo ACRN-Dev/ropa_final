@@ -1,14 +1,16 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
+
 use App\Http\Controllers\Controller;
 use App\Models\Review;
 use App\Models\Ropa;
-use App\Models\Comment; 
+use App\Models\Comment;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ReviewsExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class ReviewController extends Controller
 {
@@ -16,118 +18,125 @@ class ReviewController extends Controller
      * ADMIN: List all reviews
      */
     public function index(Request $request)
-{
-    $query = Review::with(['user', 'ropa']);
+    {
+        $query = Review::with(['user', 'ropa']);
 
-    // ---------------------
-    // SEARCH
-    // ---------------------
-    if ($request->filled('search')) {
-        $search = $request->input('search');
-
-        $query->where(function ($qr) use ($search) {
-            $qr->whereHas('user', function ($u) use ($search) {
-                $u->where('name', 'like', "%{$search}%");
-            })
-            ->orWhereHas('ropa', function ($r) use ($search) {
-                $r->where('id', $search);
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($qr) use ($search) {
+                $qr->whereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"))
+                   ->orWhereHas('ropa', fn($r) => $r->where('id', $search));
             });
-        });
-    }
-
-    // ---------------------
-    // FILTERING
-    // ---------------------
-    if ($request->filled('dpa')) {
-        $query->where('data_processing_agreement', $request->dpa);
-    }
-
-    if ($request->filled('dpia')) {
-        $query->where('data_protection_impact_assessment', $request->dpia);
-    }
-
-    // ---------------------
-    // SORTING
-    // ---------------------
-    if ($request->filled('sort')) {
-        switch ($request->sort) {
-            case 'score_high':
-                $query->orderBy('average_score', 'desc');
-                break;
-            case 'score_low':
-                $query->orderBy('average_score', 'asc');
-                break;
-            case 'oldest':
-                $query->orderBy('created_at', 'asc');
-                break;
-            default:
-                $query->orderBy('created_at', 'desc');
         }
-    } else {
-        $query->orderBy('created_at', 'desc');
+
+        if ($request->filled('dpa')) {
+            $query->where('data_processing_agreement', $request->dpa);
+        }
+
+        if ($request->filled('dpia')) {
+            $query->where('data_protection_impact_assessment', $request->dpia);
+        }
+
+        if ($request->filled('sort')) {
+            switch ($request->sort) {
+                case 'score_high':
+                    $query->orderBy('average_score', 'desc');
+                    break;
+                case 'score_low':
+                    $query->orderBy('average_score', 'asc');
+                    break;
+                case 'oldest':
+                    $query->orderBy('created_at', 'asc');
+                    break;
+                default:
+                    $query->orderBy('created_at', 'desc');
+            }
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $reviews = $query->paginate(10)->withQueryString();
+
+        return view('admindashboard.review.index', compact('reviews'));
     }
 
-    // ---------------------
-    // GET RESULTS
-    // ---------------------
-    $reviews = $query->paginate(10)->withQueryString();
-
-    return view('admindashboard.review.index', compact('reviews'));
-}
-
-
     /**
- * ADMIN: Show a specific review
- */
-public function show($id)
-{
-    $review = Review::with([
-        'user',         // the reviewer
-        'ropa',         // associated ROPA
-        'comments.user' // load comments and the users who made them
-    ])->findOrFail($id);
+     * ADMIN: Show a specific review
+     */
+    public function show($id)
+    {
+        $review = Review::with([
+            'user',
+            'ropa',
+            'comments.user'
+        ])->findOrFail($id);
 
-    // Ensure section_scores is always an array
-    $review->section_scores = is_array($review->section_scores)
-        ? $review->section_scores
-        : [];
+        $review->section_scores = is_array($review->section_scores) ? $review->section_scores : [];
 
-    // Auto-assign reviewer if none is set
-    if (!$review->user_id && auth()->check()) {
-        $review->user_id = auth()->id();
-        $review->save();
+        if (!$review->user_id && auth()->check()) {
+            $review->user_id = auth()->id();
+            $review->save();
+        }
+
+        return view('admindashboard.review.show', compact('review'));
     }
 
-    return view('admindashboard.review.show', compact('review'));
-}
-
-
-
-
     /**
-     * ADMIN: Edit/update section scores
+     * ADMIN: Update section scores and risk-related fields
      */
     public function update(Request $request, $id)
 {
     $review = Review::findOrFail($id);
 
-    // Make sure section_scores is always an array (even if empty)
+    // Validation
     $validated = $request->validate([
-        'section_scores'     => 'nullable|array',
-        'section_scores.*'   => 'nullable|numeric|min:0|max:10',
+        'section_scores' => 'nullable|array',
+        'section_scores.*' => 'nullable|numeric|min:0|max:10',
+        'risks' => 'nullable|array',
+        'risks.*.name' => 'required|string|max:255',
+        'risks.*.probability' => 'required|numeric|min:1|max:5',
+        'risks.*.impact' => 'required|numeric|min:1|max:5',
+        'mitigation_measures' => 'nullable|string',
+        'children_data_transfer' => 'nullable|boolean',
+        'vulnerable_population_transfer' => 'nullable|boolean',
+        'data_processing_agreement_file' => 'nullable|file|mimes:pdf,doc,docx',
+        'data_protection_impact_assessment_file' => 'nullable|file|mimes:pdf,doc,docx',
+        'data_sharing_agreement' => 'nullable|file|mimes:pdf,doc,docx',
     ]);
 
-    // Ensure blank inputs become 0
-    $scores = collect($validated['section_scores'] ?? [])
-        ->map(fn($score) => is_numeric($score) ? (int)$score : 0)
-        ->toArray();
+    // Update section scores without affecting other ROPA data
+    if(isset($validated['section_scores'])){
+        $scores = collect($validated['section_scores'])
+            ->map(fn($score) => is_numeric($score) ? (int)$score : 0)
+            ->toArray();
+        $review->section_scores = $scores;
+    }
 
-    $review->section_scores = $scores;
+    // Update risks and mitigation measures
+    $review->risks = $validated['risks'] ?? $review->risks;
+    $review->mitigation_measures = $validated['mitigation_measures'] ?? $review->mitigation_measures;
+
+    // Update data transfer flags properly
+    $review->children_data_transfer = $validated['children_data_transfer'] ?? 0;
+    $review->vulnerable_population_transfer = $validated['vulnerable_population_transfer'] ?? 0;
+
+    // Handle file uploads without overwriting existing files if not uploaded
+    foreach (['data_processing_agreement_file', 'data_protection_impact_assessment_file', 'data_sharing_agreement'] as $fileField) {
+        if ($request->hasFile($fileField)) {
+            $path = $request->file($fileField)->store('reviews', 'public');
+            $review->$fileField = $path;
+        }
+    }
+
+    // Recalculate risk scores
+    $review->overall_risk_score = $review->calculated_overall_risk_score;
+    $review->impact_level = $review->calculated_impact_level;
+
     $review->save();
 
     return redirect()
         ->route('admin.reviews.show', $review->id)
-        ->with('success', 'Section scores updated successfully.');
+        ->with('success', 'Review updated successfully.');
 }
 
 
@@ -148,7 +157,6 @@ public function show($id)
             ->with('success', 'Compliance fields updated.');
     }
 
-
     /**
      * ADMIN: Delete a review
      */
@@ -161,58 +169,60 @@ public function show($id)
             ->with('success', 'Review deleted successfully.');
     }
 
-
-
+    /**
+     * Export reviews to Excel
+     */
     public function export()
-{
-    return Excel::download(new ReviewsExport, 'reviews.xlsx');
-}
+    {
+        return Excel::download(new ReviewsExport, 'reviews.xlsx');
+    }
 
+    /**
+     * Dashboard: risk summary
+     */
+    public function reviewRiskDashboard()
+    {
+        $reviews = Review::all();
+        $total = max($reviews->count(), 1);
 
-public function reviewRiskDashboard()
-{
-    $reviews = Review::all();
+        $critical = $reviews->filter(fn($r) => $r->total_score <= 50)->count();
+        $high     = $reviews->filter(fn($r) => $r->total_score > 50 && $r->total_score <= 100)->count();
+        $medium   = $reviews->filter(fn($r) => $r->total_score > 100 && $r->total_score <= 160)->count();
+        $low      = $reviews->filter(fn($r) => $r->total_score > 160)->count();
 
-    $total = max($reviews->count(), 1);
+        $criticalRisk = round(($critical / $total) * 100, 1);
+        $highRisk     = round(($high / $total) * 100, 1);
+        $mediumRisk   = round(($medium / $total) * 100, 1);
+        $lowRisk      = round(($low / $total) * 100, 1);
 
-    $critical = $reviews->filter(fn($r) => $r->total_score <= 50)->count();
-    $high     = $reviews->filter(fn($r) => $r->total_score > 50 && $r->total_score <= 100)->count();
-    $medium   = $reviews->filter(fn($r) => $r->total_score > 100 && $r->total_score <= 160)->count();
-    $low      = $reviews->filter(fn($r) => $r->total_score > 160)->count();
+        return view('admindashboard.dashboard', compact(
+            'criticalRisk', 'highRisk', 'mediumRisk', 'lowRisk', 'reviews'
+        ));
+    }
 
-    $criticalRisk = round(($critical / $total) * 100, 1);
-    $highRisk     = round(($high / $total) * 100, 1);
-    $mediumRisk   = round(($medium / $total) * 100, 1);
-    $lowRisk      = round(($low / $total) * 100, 1);
+    /**
+     * Add comment to a review
+     */
+    public function addComment(Request $request, Review $review)
+    {
+        $request->validate([
+            'content' => 'required|string|max:1000',
+        ]);
 
-    return view('admindashboard.dashboard', compact(
-        'criticalRisk', 'highRisk', 'mediumRisk', 'lowRisk', 'reviews'
-    ));
-}
+        $review->comments()->create([
+            'user_id' => auth()->id(),
+            'content' => $request->input('content'),
+        ]);
 
+        return redirect()->back()->with('success', 'Comment added successfully.');
+    }
 
-
-
-public function addComment(Request $request, Review $review)
-{
-    $request->validate([
-        'content' => 'required|string|max:1000',
-    ]);
-
-    $review->comments()->create([
-        'user_id' => auth()->id(),   // or null if admin is not authenticated
-        'content' => $request->input('content'),
-    ]);
-
-    return redirect()->back()->with('success', 'Comment added successfully.');
-}
-
-
-public function deleteComment(Comment $comment)
-{
-    $comment->delete(); // soft delete
-    return back()->with('success', 'Comment deleted successfully.');
-}
-
-
+    /**
+     * Delete a comment
+     */
+    public function deleteComment(Comment $comment)
+    {
+        $comment->delete();
+        return back()->with('success', 'Comment deleted successfully.');
+    }
 }

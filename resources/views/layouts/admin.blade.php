@@ -21,7 +21,7 @@
 <div class="flex min-h-screen">
 
     <!-- SIDEBAR -->
-    <aside class="w-64 bg-orange-500 text-white p-4 flex flex-col items-center fixed top-0 left-0 h-full overflow-y-auto"
+    <aside class="w-48 bg-orange-500 text-white p-4 flex flex-col items-center fixed top-0 left-0 h-full overflow-y-auto"
            x-data="{ adminMenuOpen: {{ request()->is('admin/tickets*') ? 'true' : 'false' }} }">
 
         <!-- Logo -->

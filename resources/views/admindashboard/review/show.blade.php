@@ -129,7 +129,7 @@
 
             {{-- Risk & Data Transfer Tab --}}
             <div x-show="tab==='risk'" class="space-y-6">
-                <form action="" method="POST" enctype="multipart/form-data" @submit.prevent="submitForm()">
+               <form action="{{ route('admin.reviews.update', $review->id) }}" method="POST" enctype="multipart/form-data" @submit.prevent="submitForm()">
                     @csrf
                     @method('PUT')
 
@@ -203,7 +203,7 @@
 
                     <div class="mt-4">
                         <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">
-                            Save Risk & Data Transfer
+                            Save 
                         </button>
                     </div>
                 </form>
