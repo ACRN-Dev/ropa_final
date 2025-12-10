@@ -7,37 +7,37 @@ use App\Models\RopaIssue;
 use App\Models\Ropa;
 use App\Models\User;
 use Illuminate\Http\Request;
-use App\Mail\TicketAlertMail;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class RopaIssueController extends Controller
 {
     /**
-     * Display the Ticket Dashboard
+     * USER ticket dashboard
      */
-  public function index()
-{
-    $user = auth()->user();
+    public function userIndex()
+    {
+        $user = auth()->user();
 
-    if ($user->role === 'admin') {
-
-        $pending_tickets = Ticket::where('status', 'open')
+        $pending_tickets = RopaIssue::where('user_id', $user->id)
+            ->where('status', 'open')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        $completed_tickets = Ticket::where('status', 'completed')
+        $completed_tickets = RopaIssue::where('user_id', $user->id)
+            ->where('status', 'resolved')
             ->orderBy('updated_at', 'desc')
             ->paginate(10);
 
-        $pending_count = Ticket::where('status', 'open')->count();
-        $completed_count = Ticket::where('status', 'completed')->count();
+        $pending_count = RopaIssue::where('user_id', $user->id)
+            ->where('status', 'open')
+            ->count();
 
-        $ropas = Ropa::all();
+        $completed_count = RopaIssue::where('user_id', $user->id)
+            ->where('status', 'resolved')
+            ->count();
 
-        // 👉 FIX: return admin index view
-        return view('admindashboard.ticket.index', compact(
+        $ropas = Ropa::where('user_id', $user->id)->get();
+
+        return view('ticket.index', compact(
             'pending_tickets',
             'completed_tickets',
             'pending_count',
@@ -46,43 +46,56 @@ class RopaIssueController extends Controller
         ));
     }
 
-    // ---------------------------------------------
-    // NON-ADMIN USERS
-    // ---------------------------------------------
-    $pending_tickets = RopaIssue::where('user_id', $user->id)
-        ->where('status', 'open')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10);
+    /**
+     * ADMIN & USER Index
+     */
+    public function index()
+    {
+        $user = auth()->user();
 
-    $completed_tickets = RopaIssue::where('user_id', $user->id)
-        ->where('status', 'completed')
-        ->orderBy('updated_at', 'desc')
-        ->paginate(10);
+        if ($user->isAdmin()) {
 
-    $pending_count = RopaIssue::where('user_id', $user->id)
-        ->where('status', 'open')
-        ->count();
+            $pending_tickets = RopaIssue::where('status', 'open')
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
 
-    $completed_count = RopaIssue::where('user_id', $user->id)
-        ->where('status', 'completed')
-        ->count();
+            $completed_tickets = RopaIssue::where('status', 'resolved')
+                ->orderBy('updated_at', 'desc')
+                ->paginate(10);
 
-    $ropas = Ropa::where('user_id', $user->id)->get();
+            $pending_count = RopaIssue::where('status', 'open')->count();
+            $completed_count = RopaIssue::where('status', 'resolved')->count();
 
-    // 👉 FIX: return user index view
-    return view('ticket.index', compact(
-        'pending_tickets',
-        'completed_tickets',
-        'pending_count',
-        'completed_count',
-        'ropas'
-    ));
-}
+            $ropas = Ropa::all();
 
+            return view('admindashboard.ticket.index', compact(
+                'pending_tickets',
+                'completed_tickets',
+                'pending_count',
+                'completed_count',
+                'ropas'
+            ));
+        }
+
+        // Non-admin users
+        return $this->userIndex();
+    }
 
 
     /**
-     * Store a new ticket + send email
+     * CREATE FORM
+     */
+    public function create()
+    {
+        $user = auth()->user();
+        $ropas = Ropa::where('user_id', $user->id)->get();
+
+        return view('ticket.create', compact('ropas'));
+    }
+
+
+    /**
+     * STORE new ticket
      */
     public function store(Request $request)
     {
@@ -90,45 +103,17 @@ class RopaIssueController extends Controller
             'ropa_id'     => 'required|exists:ropas,id',
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
-            'risk_level'  => 'required|in:low,medium,high,critical',
+            'risk_level'  => 'nullable|in:low,medium,high,critical',
         ]);
 
-        // Create ticket
-        $ticket = RopaIssue::create([
+        RopaIssue::create([
             'ropa_id'     => $validated['ropa_id'],
-            'user_id'     => Auth::id(),
+            'user_id'     => auth()->id(),
             'title'       => $validated['title'],
             'description' => $validated['description'] ?? null,
-            'risk_level'  => $validated['risk_level'],
+            'risk_level'  => $validated['risk_level'] ?? 'low',
             'status'      => 'open',
         ]);
-
-        // -----------------------------------------------------------
-        // SEND EMAIL TO ALL ACTIVE ADMINS
-        // -----------------------------------------------------------
-        $adminEmails = User::where('user_type', 1)
-            ->where('active', 1)
-            ->pluck('email')
-            ->toArray();
-
-        if (count($adminEmails) > 0) {
-            try {
-
-                Mail::to($adminEmails)->send(new TicketAlertMail($ticket));
-
-                Log::info("Ticket alert sent to admins", [
-                    'ticket_id' => $ticket->id,
-                    'admin_count' => count($adminEmails),
-                ]);
-
-            } catch (\Throwable $e) {
-
-                Log::error("Failed sending admin ticket email", [
-                    'ticket_id' => $ticket->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
 
         return redirect()->route('ticket.index')
             ->with('success', 'Ticket created successfully.');
@@ -136,98 +121,75 @@ class RopaIssueController extends Controller
 
 
     /**
-     * Display a single ticket
+     * Show Ticket (ADMIN MODAL)
      */
-    public function show(string $id)
+    public function show($id)
     {
-        $issue = RopaIssue::with(['user', 'ropa'])->findOrFail($id);
-        return view('ticket.show', compact('issue'));
+        $ticket = RopaIssue::with(['user', 'ropa'])->findOrFail($id);
+        return view('admindashboard.ticket.modal', compact('ticket'));
     }
 
 
     /**
-     * Edit ticket
+     * CLOSE TICKET (AJAX)
      */
-    public function edit(string $id)
+    public function close(Request $request, $id)
+    {
+        $request->validate([
+            'comment' => 'required|string|max:1000',
+        ]);
+
+        $ticket = RopaIssue::findOrFail($id);
+
+        $ticket->status = 'resolved';
+        $ticket->comment = $request->comment; // stored in DB table
+        $ticket->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Ticket closed successfully.',
+            'ticket_id' => $ticket->id,
+        ]);
+    }
+
+
+    /**
+     * EDIT FORM
+     */
+    public function edit($id)
     {
         $issue = RopaIssue::findOrFail($id);
         $ropas = Ropa::all();
-
         return view('ticket.edit', compact('issue', 'ropas'));
     }
 
 
-    
-
     /**
-     * Update ticket
+     * UPDATE ticket
      */
-    public function update(Request $request, string $id)
-{
-    $issue = RopaIssue::findOrFail($id);
+    public function update(Request $request, $id)
+    {
+        $issue = RopaIssue::findOrFail($id);
 
-    // -------------------------------------------------------
-    // Validate input
-    // -------------------------------------------------------
-    $validated = $request->validate([
-        'ropa_id'     => 'required|exists:ropas,id',
-        'title'       => 'required|string|max:255',
-        'description' => 'nullable|string',
-        'risk_level'  => 'required|in:low,medium,high,critical',
-        'status'      => 'required|in:open,resolved',
-    ]);
-
-    // -------------------------------------------------------
-    // Log previous values before updating
-    // -------------------------------------------------------
-    $previousStatus   = $issue->status;
-    $previousRisk     = $issue->risk_level;
-
-    // -------------------------------------------------------
-    // Auto-set resolved_at timestamp if status changes to resolved
-    // -------------------------------------------------------
-    if ($validated['status'] === 'resolved' && $issue->resolved_at === null) {
-        $validated['resolved_at'] = now();
-    }
-
-    // -------------------------------------------------------
-    // Update the issue
-    // -------------------------------------------------------
-    $issue->update($validated);
-
-    // -------------------------------------------------------
-    // Save status change history
-    // -------------------------------------------------------
-    if ($previousStatus !== $validated['status']) {
-        RopaIssue::create([
-            'issue_id'   => $issue->id,
-            'changed_by' => auth()->id(),
-            'old_status' => $previousStatus,
-            'new_status' => $validated['status'],
+        $validated = $request->validate([
+            'ropa_id'     => 'required|exists:ropas,id',
+            'title'       => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'risk_level'  => 'required|in:low,medium,high,critical',
+            'status'      => 'required|in:open,resolved',
         ]);
-    }
 
-    // -------------------------------------------------------
-    // Save risk-level change history
-    // -------------------------------------------------------
-    if ($previousRisk !== $validated['risk_level']) {
-        IssueHistory::create([
-            'issue_id'   => $issue->id,
-            'changed_by' => auth()->id(),
-            'old_status' => $previousRisk,
-            'new_status' => $validated['risk_level'],
-        ]);
-    }
+        $issue->update($validated);
 
-    return redirect()->route('ticket.index')
-        ->with('success', 'Ticket updated successfully.');
-}
+        return redirect()->route('ticket.index')
+            ->with('success', 'Ticket updated successfully.');
+    }
 
 
     /**
-     * Delete ticket
+     * DELETE ticket
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
         $issue = RopaIssue::findOrFail($id);
         $issue->delete();

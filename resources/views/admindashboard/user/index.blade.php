@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'User Management')
+@section('title', 'Admin | User Management')
 
 @section('content')
 <div class="mx-auto p-4 sm:p-6">
@@ -98,58 +98,38 @@
 
                         <!-- Actions -->
                         <td class="py-3 px-4">
-                            <div class="flex flex-wrap justify-center gap-2 sm:gap-3 items-center">
-
-                                <!-- View -->
-                                <a href="{{ route('admin.users.show', $user->id) }}" 
-                                   class="flex items-center gap-1 text-orange-500 hover:text-orange-600" 
-                                   title="View">
+                            <div class="flex justify-center space-x-2 sm:space-x-3">
+                                <a href="{{ route('admin.users.show', $user->id) }}" class="text-orange-500 hover:text-orange-600" title="View">
                                     <i data-feather="eye" class="w-4 h-4"></i>
-                                    <span class="hidden sm:inline text-xs">View</span>
                                 </a>
 
-                                <!-- Edit -->
-                                <a href="{{ route('admin.users.edit', $user->id) }}" 
-                                   class="flex items-center gap-1 text-orange-400 hover:text-orange-500" 
-                                   title="Edit">
+                                <a href="{{ route('admin.users.edit', $user->id) }}" class="text-orange-400 hover:text-orange-500" title="Edit">
                                     <i data-feather="edit" class="w-4 h-4"></i>
-                                    <span class="hidden sm:inline text-xs">Edit</span>
                                 </a>
 
                                 <!-- Toggle Status -->
-                                <form action="{{ route('admin.users.toggleStatus', $user->id) }}" method="POST" 
-                                      onsubmit="return confirm('Are you sure you want to {{ $user->isActive() ? 'deactivate' : 'activate' }} this account?')">
+                                <form action="{{ route('admin.users.toggleStatus', $user->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to {{ $user->isActive() ? 'deactivate' : 'activate' }} this account?')">
                                     @csrf
                                     @method('PATCH')
-                                    <button type="submit" 
-                                            class="flex items-center gap-1 {{ $user->isActive() ? 'text-gray-600' : 'text-green-600' }} hover:text-gray-900"
-                                            title="{{ $user->isActive() ? 'Deactivate' : 'Activate' }}">
+                                    <button type="submit" class="{{ $user->isActive() ? 'text-gray-600' : 'text-green-600' }} hover:text-gray-900">
                                         <i data-feather="{{ $user->isActive() ? 'slash' : 'check' }}" class="w-4 h-4"></i>
-                                        <span class="hidden sm:inline text-xs">{{ $user->isActive() ? 'Deactivate' : 'Activate' }}</span>
                                     </button>
                                 </form>
 
                                 <!-- 2FA Toggle -->
-                                <form action="{{ route('2fa.toggle') }}" method="POST" 
-                                      onsubmit="return confirm('Toggle Two-Factor Authentication for this user?')">
+                                <form action="{{ route('2fa.toggle') }}" method="POST" onsubmit="return confirm('Toggle 2FA for this user?')">
                                     @csrf
                                     @method('PATCH')
                                     <input type="hidden" name="user_id" value="{{ $user->id }}">
-                                    <button type="submit" 
-                                            class="flex items-center gap-1 {{ $user->two_factor_enabled ? 'text-blue-600' : 'text-gray-500' }} hover:text-blue-800"
-                                            title="Toggle 2FA">
+                                    <button type="submit" class="{{ $user->two_factor_enabled ? 'text-blue-600' : 'text-gray-500' }} hover:text-blue-800">
                                         <i data-feather="{{ $user->two_factor_enabled ? 'lock' : 'unlock' }}" class="w-4 h-4"></i>
-                                        <span class="hidden sm:inline text-xs">{{ $user->two_factor_enabled ? '2FA On' : '2FA Off' }}</span>
                                     </button>
                                 </form>
-
                             </div>
                         </td>
                     </tr>
                 @empty
-                    <tr>
-                        <td colspan="6" class="py-4 text-center text-gray-500">No users found.</td>
-                    </tr>
+                    <tr><td colspan="6" class="py-4 text-center text-gray-500">No users found.</td></tr>
                 @endforelse
             </tbody>
         </table>

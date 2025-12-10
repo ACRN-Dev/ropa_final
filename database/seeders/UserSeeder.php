@@ -28,8 +28,8 @@ class UserSeeder extends Seeder
         // Regular users
         DB::table('users')->insert([
             [
-                'name' => 'Blessward Mutsotso',
-                'email' => 'blessward.mutsotso@acrnhealth.com',
+                'name' => 'ROPA Admin',
+                'email' => 'systemadmin@gmail.com',
                 'password' => Hash::make('password'),
                 'user_type' => 0,
                 'department' => 'Research & Development',

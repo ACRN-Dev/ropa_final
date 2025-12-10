@@ -13,6 +13,7 @@ class RopaIssue extends Model
         'description',
         'risk_level',
         'status',
+        'comment',
     ];
 
     public function ropa()

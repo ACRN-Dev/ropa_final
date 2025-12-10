@@ -1,9 +1,8 @@
 
 
-
 @extends('layouts.admin')
 
-@section('title', 'Admin Dashboard')
+@section('title', 'Admin | Dashboard')
 
 @section('content')
 
@@ -186,7 +185,7 @@
 
                         <!-- Department in orange-500 -->
                         <span class="text-orange-500">
-                            {{ $ropa->department_name ?? $ropa->other_department ?? '—' }}
+                            {{ $ropa->department?? $ropa->other_department ?? '—' }}
                         </span>
 
                         • {{ $ropa->user->name ?? '—' }} — 

@@ -188,11 +188,10 @@ Route::delete('/reviews/comments/{comment}', [AdminReviewController::class, 'del
 
 });
 
+Route::prefix('ticket')->name('ticket.')->middleware(['auth'])->group(function () {
 
-Route::prefix('ticket')->name('ticket.')->group(function () {
-
-    // List all tickets
-    Route::get('/', [RopaIssueController::class, 'index'])->name('index');
+    // List all tickets for general user
+    Route::get('/', [RopaIssueController::class, 'userIndex'])->name('index');
 
     // Create form
     Route::get('/create', [RopaIssueController::class, 'create'])->name('create');
@@ -211,7 +210,6 @@ Route::prefix('ticket')->name('ticket.')->group(function () {
 
     // Delete ticket
     Route::delete('/{id}', [RopaIssueController::class, 'destroy'])->name('destroy');
-
 });
 
 
@@ -221,19 +219,22 @@ Route::prefix('admin/tickets')->name('admin.tickets.')->middleware(['auth', 'adm
     // List all tickets (pending + resolved)
     Route::get('/', [RopaIssueController::class, 'index'])->name('index');
 
-    // Show ticket
+    // Show ticket (for modal content)
     Route::get('/{id}', [RopaIssueController::class, 'show'])->name('show');
 
-    // Edit ticket
+    // Edit ticket (for update page)
     Route::get('/{id}/edit', [RopaIssueController::class, 'edit'])->name('edit');
 
-    // Update ticket
+    // Update ticket (for saving updates)
     Route::put('/{id}', [RopaIssueController::class, 'update'])->name('update');
 
     // Delete ticket
     Route::delete('/{id}', [RopaIssueController::class, 'destroy'])->name('destroy');
-});
 
+    // Close ticket (store comment and mark as resolved)
+    Route::post('/{id}/close', [RopaIssueController::class, 'close'])
+         ->name('close');
+});
 
 
 Route::get('/admin/review-risk-dashboard', [App\Http\Controllers\Admin\ReviewController::class, 'reviewRiskDashboard'])

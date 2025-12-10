@@ -11,6 +11,10 @@ use App\Exports\ReviewsExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+
+
 
 class ReviewController extends Controller
 {
@@ -83,60 +87,97 @@ class ReviewController extends Controller
 
     /**
      * ADMIN: Update section scores and risk-related fields
+     * 
+     * 
      */
-    public function update(Request $request, $id)
+
+
+    
+public function update(Request $request, $id)
 {
-    $review = Review::findOrFail($id);
+    try {
+        DB::beginTransaction();
 
-    // Validation
-    $validated = $request->validate([
-        'section_scores' => 'nullable|array',
-        'section_scores.*' => 'nullable|numeric|min:0|max:10',
-        'risks' => 'nullable|array',
-        'risks.*.name' => 'required|string|max:255',
-        'risks.*.probability' => 'required|numeric|min:1|max:5',
-        'risks.*.impact' => 'required|numeric|min:1|max:5',
-        'mitigation_measures' => 'nullable|string',
-        'children_data_transfer' => 'nullable|boolean',
-        'vulnerable_population_transfer' => 'nullable|boolean',
-        'data_processing_agreement_file' => 'nullable|file|mimes:pdf,doc,docx',
-        'data_protection_impact_assessment_file' => 'nullable|file|mimes:pdf,doc,docx',
-        'data_sharing_agreement' => 'nullable|file|mimes:pdf,doc,docx',
-    ]);
+        $review = Review::with('ropa')->findOrFail($id);
 
-    // Update section scores without affecting other ROPA data
-    if(isset($validated['section_scores'])){
-        $scores = collect($validated['section_scores'])
-            ->map(fn($score) => is_numeric($score) ? (int)$score : 0)
-            ->toArray();
-        $review->section_scores = $scores;
-    }
+        // Validate incoming data
+        $validated = $request->validate([
+            'risks.*.name' => 'required|string|max:255',
+            'risks.*.probability' => 'required|numeric|min:1|max:5',
+            'risks.*.impact' => 'required|numeric|min:1|max:5',
 
-    // Update risks and mitigation measures
-    $review->risks = $validated['risks'] ?? $review->risks;
-    $review->mitigation_measures = $validated['mitigation_measures'] ?? $review->mitigation_measures;
+            'mitigation_measures' => 'nullable|string',
 
-    // Update data transfer flags properly
-    $review->children_data_transfer = $validated['children_data_transfer'] ?? 0;
-    $review->vulnerable_population_transfer = $validated['vulnerable_population_transfer'] ?? 0;
+            'children_data_transfer' => 'nullable|boolean',
+            'vulnerable_population_transfer' => 'nullable|boolean',
 
-    // Handle file uploads without overwriting existing files if not uploaded
-    foreach (['data_processing_agreement_file', 'data_protection_impact_assessment_file', 'data_sharing_agreement'] as $fileField) {
-        if ($request->hasFile($fileField)) {
-            $path = $request->file($fileField)->store('reviews', 'public');
-            $review->$fileField = $path;
+            // Must match actual DB columns
+            'data_processing_agreement' => 'nullable|file|mimes:pdf,doc,docx',
+            'data_protection_impact_assessment' => 'nullable|file|mimes:pdf,doc,docx',
+            'data_sharing_agreement' => 'nullable|file|mimes:pdf,doc,docx',
+
+            'ropa_id' => 'nullable|exists:ropas,id',
+        ]);
+
+        // Ensure ROPA is not accidentally cleared
+        if ($request->filled('ropa_id')) {
+            $review->ropa_id = $validated['ropa_id'];
         }
+
+        // Handle risks - save as JSON
+        if (isset($validated['risks'])) {
+            $review->risks = json_encode($validated['risks']);
+        }
+
+        // Mitigation measures
+        $review->mitigation_measures =
+            $validated['mitigation_measures'] ?? $review->mitigation_measures;
+
+        // Data transfer booleans
+        $review->children_data_transfer =
+            $validated['children_data_transfer'] ?? $review->children_data_transfer ?? 0;
+
+        $review->vulnerable_population_transfer =
+            $validated['vulnerable_population_transfer'] ?? $review->vulnerable_population_transfer ?? 0;
+
+        // Correct file upload handling
+        $fileFields = [
+            'data_processing_agreement',
+            'data_protection_impact_assessment',
+            'data_sharing_agreement'
+        ];
+
+        foreach ($fileFields as $field) {
+            if ($request->hasFile($field)) {
+                $review->$field = $request->file($field)->store('reviews', 'public');
+            }
+        }
+
+        $review->save();
+
+        // Reload ROPA after save
+        $review->load('ropa');
+
+        DB::commit();
+
+        return redirect()
+            ->route('admin.reviews.show', $review->id)
+            ->with('success', 'Review updated successfully.');
+
+    } catch (\Illuminate\Validation\ValidationException $ve) {
+
+        DB::rollBack();
+
+        return back()
+            ->withErrors($ve->errors())
+            ->withInput();
+
+    } catch (\Exception $e) {
+
+        DB::rollBack();
+
+        return back()->with('error', 'An unexpected error occurred. Please check logs.');
     }
-
-    // Recalculate risk scores
-    $review->overall_risk_score = $review->calculated_overall_risk_score;
-    $review->impact_level = $review->calculated_impact_level;
-
-    $review->save();
-
-    return redirect()
-        ->route('admin.reviews.show', $review->id)
-        ->with('success', 'Review updated successfully.');
 }
 
 

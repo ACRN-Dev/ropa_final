@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Risk Analytics Overview')
+@section('title', 'Admin | Risk Analytics Overview')
 
 @section('content')
 <div class="container mx-auto p-4 md:p-6">

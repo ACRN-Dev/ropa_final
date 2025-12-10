@@ -136,7 +136,8 @@
                                         '{{ addslashes($ticket->title) }}',
                                         '{{ $ticket->risk_level }}',
                                         `{{ addslashes($ticket->description) }}`,
-                                        '{{ $ticket->status }}'
+                                        '{{ $ticket->status }}',
+                                        '{{ $ticket->ropa_id }}'
                                     )">
                                     Edit
                                 </button>
@@ -174,6 +175,7 @@
                         <th class="p-3 text-left">Title</th>
                         <th class="p-3 text-left">ROPA</th>
                         <th class="p-3 text-left">Completed On</th>
+                        <th class="p-3 text-left">Comment</th>
                         <th class="p-3 text-left"></th>
                     </tr>
                 </thead>
@@ -183,16 +185,14 @@
                         <td class="p-3">{{ $ticket->title }}</td>
                         <td class="p-3">{{ $ticket->ropa->organisation_name ?? 'N/A' }}</td>
                         <td class="p-3">{{ $ticket->updated_at->format('d M Y') }}</td>
+                        <td class="p-3">{{ $ticket->comment ?? 'No comment' }}</td>
                         <td class="p-3">
-                            <a href="{{ route('ticket.show', $ticket->id) }}"
-                                class="text-orange-500 hover:text-orange-600">
-                                View →
-                            </a>
+                           
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td class="p-3 text-center text-gray-500" colspan="4">
+                        <td class="p-3 text-center text-gray-500" colspan="5">
                             No completed tickets.
                         </td>
                     </tr>
@@ -235,6 +235,7 @@ function showTab(tab) {
     feather.replace();
 }
 </script>
+
 <!-- ====================================================== -->
 <!-- EDIT MODAL -->
 <!-- ====================================================== -->
@@ -267,7 +268,7 @@ function showTab(tab) {
                 <textarea name="description" id="editDescription" rows="3" class="w-full border rounded p-2"></textarea>
             </div>
 
-            <!-- NEW: STATUS FIELD -->
+            <!-- STATUS FIELD -->
             <div class="mb-3">
                 <label class="font-medium">Status</label>
                 <select name="status" id="editStatus" class="w-full border rounded p-2" required>
@@ -276,7 +277,7 @@ function showTab(tab) {
                 </select>
             </div>
 
-            <!-- NEW: REQUIRED ROPA FIELD -->
+            <!-- ROPA FIELD -->
             <div class="mb-3">
                 <label class="font-medium">Select ROPA</label>
                 <select name="ropa_id" id="editRopa" class="w-full border rounded p-2" required>
@@ -308,8 +309,6 @@ function openEditModal(id, title, risk, description, status, ropa_id) {
     document.getElementById('editRisk').value = risk;
     document.getElementById('editDescription').value = description;
     document.getElementById('editStatus').value = status;
-
-    // NEW
     document.getElementById('editRopa').value = ropa_id;
 
     document.getElementById('editForm').action = "/ticket/" + id;

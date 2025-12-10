@@ -18,16 +18,7 @@
         <div class="flex items-center space-x-6">
             <!-- Notification -->
             <div class="relative">
-                <button id="notificationButton" class="relative focus:outline-none">
-                    <i data-feather="bell" class="w-6 h-6 text-gray-600 dark:text-gray-300"></i>
-                    <span class="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full px-1.5 py-0.5">3</span>
-                </button>
-                <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 shadow-lg rounded-lg py-2 z-50">
-                    <p class="px-4 py-2 font-semibold border-b dark:border-gray-700 text-gray-700 dark:text-gray-300">Notifications</p>
-                    <a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">New ROPA submitted</a>
-                    <a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">Your ROPA approved</a>
-                    <a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">Reminder: Update pending records</a>
-                </div>
+               
             </div>
 
 
@@ -296,7 +287,6 @@
 </div>
 </div>
 
-
 <div class="mt-10 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md w-full">
 
     <h2 class="text-xl font-bold mb-4 flex items-center text-orange-500">
@@ -371,17 +361,13 @@
                             {{ $ropa->created_at->format('d/m/Y H:i') }}
                         </td>
                         <td class="px-4 py-3">
-                            <div class="flex flex-wrap gap-2">
+                            <div class="flex items-center space-x-2">
                                 <a href="{{ route('ropa.show', $ropa->id) }}"
                                    class="bg-orange-600 hover:bg-orange-700 text-white text-sm px-3 py-2 rounded-lg flex items-center shadow">
                                     <i data-feather="eye" class="w-4 h-4 mr-1"></i> View
                                 </a>
 
-                                <a href="{{ route('ropa.print', $ropa->id) }}" target="_blank"
-                                   class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2 rounded-lg flex items-center shadow">
-                                    <i data-feather="printer" class="w-4 h-4 mr-1"></i> Print
-                                </a>
-
+                               
                                 <button onclick="openShareModal({{ $ropa->id }})"
                                         class="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-2 rounded-lg flex items-center shadow">
                                     <i data-feather="share-2" class="w-4 h-4 mr-1"></i> Share
@@ -391,17 +377,15 @@
                     </tr>
                 @empty
                    <tr>
-    <td colspan="5" class="px-4 py-6 text-center text-gray-600 dark:text-gray-400">
-        <div class="flex items-center justify-center space-x-3">
-            <!-- Info / Warning Icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10c0 4.418-3.582 8-8 8s-8-3.582-8-8 3.582-8 8-8 8 3.582 8 8zm-9-3a1 1 0 112 0v2a1 1 0 11-2 0V7zm1 4a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" clip-rule="evenodd"/>
-            </svg>
-            <span>No ROPA records found.</span>
-        </div>
-    </td>
-</tr>
-
+                        <td colspan="5" class="px-4 py-6 text-center text-gray-600 dark:text-gray-400">
+                            <div class="flex items-center justify-center space-x-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10c0 4.418-3.582 8-8 8s-8-3.582-8-8 3.582-8 8-8 8 3.582 8 8zm-9-3a1 1 0 112 0v2a1 1 0 11-2 0V7zm1 4a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" clip-rule="evenodd"/>
+                                </svg>
+                                <span>No ROPA records found.</span>
+                            </div>
+                        </td>
+                    </tr>
                 @endforelse
             </tbody>
         </table>
@@ -412,7 +396,6 @@
         {{ $allRopas->links() }}
     </div>
 </div>
-
 
 
 <!-- Feather Icons -->

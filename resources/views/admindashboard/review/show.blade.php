@@ -66,8 +66,7 @@
         ];
     @endphp
 
-    <!-- Tabs -->
-    <div x-data="reviewData(@json($review->risks ?? []), '{{ $review->overall_risk_score ?? 0 }}', '{{ $review->impact_level ?? '' }}')" x-cloak class="bg-white rounded-lg shadow-lg">
+    <div x-data="reviewData(@json($review->risks), {{ $review->overall_risk_score ?? 0 }}, '{{ $review->impact_level ?? '' }}')" x-cloak class="bg-white rounded-lg shadow-lg">
         <div class="flex border-b border-gray-200">
             <button @click="tab='details'" :class="tab==='details' ? 'border-orange-500 text-orange-600' : 'text-gray-600'"
                     class="px-4 py-2 font-medium border-b-2 focus:outline-none">
@@ -94,7 +93,7 @@
                         @php
                             $value = $ropa->{$section};
                             $skipIfEmpty = ['technical_measures_other', 'lawful_basis_other', 'organisational_measures_other'];
-                            if (in_array($section, $skipIfEmpty) && (!$value || $value === null || $value === '' || (is_array($value) && count($value) === 0))) continue;
+                            if (in_array($section, $skipIfEmpty) && empty($value)) continue;
                         @endphp
 
                         <div class="bg-gray-50 shadow rounded-xl p-5 flex flex-col gap-2 hover:shadow-lg transition transform hover:scale-105">
@@ -110,30 +109,35 @@
                 {{-- Compliance Documents --}}
                 <div class="bg-white shadow-lg rounded-xl p-5 mb-6">
                     <div class="space-y-4">
-                        @if ($review->data_processing_agreement)
-                            <a href="{{ asset('storage/'.$review->data_processing_agreement) }}" target="_blank"
+
+                        {{-- FIXED FIELD NAME --}}
+                        @if ($review->data_processing_agreement_file)
+                            <a href="{{ asset('storage/'.$review->data_processing_agreement_file) }}" target="_blank"
                                class="flex items-center gap-2 text-blue-600 hover:underline">
                                 <i data-feather="file-text" class="w-4 h-4"></i> View Data Processing Agreement (DPA)
                             </a>
                         @endif
 
-                        @if ($review->data_protection_impact_assessment)
-                            <a href="{{ asset('storage/'.$review->data_protection_impact_assessment) }}" target="_blank"
+                        {{-- FIXED FIELD NAME --}}
+                        @if ($review->data_protection_impact_assessment_file)
+                            <a href="{{ asset('storage/'.$review->data_protection_impact_assessment_file) }}" target="_blank"
                                class="flex items-center gap-2 text-blue-600 hover:underline">
                                 <i data-feather="file-text" class="w-4 h-4"></i> View Data Protection Impact Assessment (DPIA)
                             </a>
                         @endif
+
                     </div>
                 </div>
             </div>
 
-            {{-- Risk & Data Transfer Tab --}}
+            {{-- Risk Tab --}}
             <div x-show="tab==='risk'" class="space-y-6">
                <form action="{{ route('admin.reviews.update', $review->id) }}" method="POST" enctype="multipart/form-data" @submit.prevent="submitForm()">
                     @csrf
                     @method('PUT')
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
                         <div class="flex flex-col gap-2">
                             <label class="font-medium">Children Data Transfer?</label>
                             <select name="children_data_transfer" class="border border-gray-300 rounded-lg px-3 py-2">
@@ -150,6 +154,8 @@
                             </select>
                         </div>
 
+                        <input type="hidden" name="ropa_id" value="{{ $review->ropa_id }}">
+
                         <div class="flex flex-col gap-2 md:col-span-2">
                             <label class="font-medium">Data Sharing Agreement (Upload or Link)</label>
                             <input type="file" name="data_sharing_agreement" class="border border-gray-300 rounded-lg px-3 py-2">
@@ -160,7 +166,7 @@
                         </div>
                     </div>
 
-                    {{-- Dynamic Risks --}}
+                    {{-- RISK LOOP --}}
                     <div class="space-y-4 mt-4">
                         <template x-for="(risk, index) in risks" :key="index">
                             <div class="p-4 border border-gray-200 rounded-lg flex flex-col gap-2 bg-gray-50">
@@ -203,13 +209,13 @@
 
                     <div class="mt-4">
                         <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">
-                            Save 
+                            Save
                         </button>
                     </div>
                 </form>
             </div>
 
-            {{-- Risk Score Tab --}}
+            {{-- Score Tab --}}
             <div x-show="tab==='score'" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <template x-for="(risk, index) in risks" :key="index">
@@ -240,7 +246,7 @@
     function reviewData(existingRisks = [], initialScore = 0, initialLevel = '') {
         return {
             tab: 'details',
-            risks: existingRisks.length ? existingRisks.map(r => ({...r, probability: r.probability || 1, impact: r.impact || 1})) : [],
+            risks: existingRisks.map(r => ({ ...r, probability: r.probability || 1, impact: r.impact || 1 })),
             overallScore: parseInt(initialScore),
             impactLevel: initialLevel || '',
             calculateScore() {
@@ -260,7 +266,7 @@
                 else this.impactLevel = 'Critical';
             },
             addRisk() {
-                this.risks.push({name:'', probability:1, impact:1});
+                this.risks.push({ name: '', probability: 1, impact: 1 });
                 this.calculateScore();
             },
             removeRisk(index) {

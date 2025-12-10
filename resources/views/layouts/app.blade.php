@@ -16,7 +16,7 @@
 
     <div class="flex min-h-screen">
         <!-- Sidebar (FIXED) -->
-      <aside class="w-48 bg-orange-600 text-white p-4 flex flex-col items-center fixed left-0 top-0 h-screen overflow-y-auto">
+      <aside class="w-48 bg-orange-500 text-white p-4 flex flex-col items-center fixed left-0 top-0 h-screen overflow-y-auto">
 
             <!-- Logo -->
             <div class="mb-6">
@@ -36,11 +36,6 @@
                     </a>
                 </li>
 
-                <li class="mb-2">
-                    <a href="" class="flex items-center py-2 px-3 rounded hover:bg-orange-500 transition-colors duration-200">
-                        <i data-feather="check-square" class="w-5 h-5 mr-2"></i> Reviews
-                    </a>
-                </li>
 
                 <li class="mb-2">
                     <a href="{{ route('ticket.index') }}" class="flex items-center py-2 px-3 rounded hover:bg-orange-500 transition-colors duration-200 w-full text-left">
