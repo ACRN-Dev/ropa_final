@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Create ROPA Record')
+@section('title', 'User | Create ROPA Record')
 
 @section('content')
 <div class="container mx-auto p-6">
@@ -41,8 +41,7 @@
 
 <!-- ORGANISATION & DEPARTMENT -->
 <div class="bg-white p-6 rounded-xl shadow-md">
-    <h2 class="text-xl font-bold mb-4 text-gray-700">Organisation Information</h2>
-
+    <h2 class="text-xl font-bold mb-4 text-gray-700">🏢 Organisation Information</h2>
     <div class="grid md:grid-cols-2 gap-6">
 
         <!-- Organisation Name -->
@@ -60,6 +59,7 @@
 
         <!-- Other Organisation Input -->
         <div id="other_organisation_wrapper" class="{{ old('organisation_name') == 'Other' ? '' : 'hidden' }}">
+            
             <label class="block font-semibold mb-1">Specify Other Organisation(s)</label>
             <div id="other_organisation_container" class="space-y-2">
                 <input type="text" name="other_organisation_name[]" class="w-full border rounded-lg p-2" placeholder="Enter organisation name">
@@ -99,7 +99,7 @@
 
         <!-- PROCESSING INFORMATION -->
         <div class="bg-white p-6 rounded-xl shadow-md">
-            <h2 class="text-xl font-bold mb-4 text-gray-700">Processing Information</h2>
+         <h2 class="text-xl font-bold mb-4 text-gray-700">⚙️ Processing Information</h2>
             <div class="grid gap-6">
 
                 <!-- Processes -->
@@ -183,7 +183,7 @@
 
         <!-- INFORMATION SHARING -->
         <div class="bg-white p-6 rounded-xl shadow-md">
-            <h2 class="text-xl font-bold mb-4 text-gray-700">Information Sharing</h2>
+            <h2 class="text-xl font-bold mb-4 text-gray-700">🔗 Information Sharing</h2>
             <div class="grid md:grid-cols-3 gap-6">
                 <div>
                     <label class="block font-semibold mb-1">Information Shared?</label>
@@ -235,7 +235,8 @@
 
         <!-- ACCESS CONTROL -->
         <div class="bg-white p-6 rounded-xl shadow-md">
-            <label class="block font-semibold mb-2">Access Control Implemented</label>
+            
+         <label class="block font-semibold mb-2">🛡️ Access Control Implemented</label>
             <select name="access_control" id="access_control_select" class="w-full border rounded-lg p-2">
                 <option value="">-- Select --</option>
                 <option value="1" {{ old('access_control') == '1' ? 'selected' : '' }}>Yes</option>
@@ -245,7 +246,7 @@
 
         <!-- ACCESS & SECURITY MEASURES -->
         <div id="access_security_measures_section" class="bg-white p-6 rounded-xl shadow-md hidden">
-            <h2 class="text-xl font-bold mb-4 text-gray-700">Access & Security Measures</h2>
+           <h2 class="text-xl font-bold mb-4 text-gray-700">🔒 Access & Security Measures</h2>
             
             <!-- TECHNICAL MEASURES -->
             <div>
@@ -292,7 +293,7 @@
 
         <!-- LAWFUL BASIS & RISK -->
         <div class="bg-white p-6 rounded-xl shadow-md">
-            <h2 class="text-xl font-bold mb-4 text-gray-700">Lawful Basis & Risk</h2>
+            <h2 class="text-xl font-bold mb-4 text-gray-700">⚖️ Lawful Basis & Risk</h2>
             <div class="grid md:grid-cols-2 gap-6">
                 <div>
                     <label class="block font-semibold mb-1">Lawful Basis</label>

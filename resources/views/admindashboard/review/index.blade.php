@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Submitted ROPAs')
+@section('title', 'Admin | Submitted ROPAs')
 
 @section('content')
 <div class="container mx-auto p-4 sm:p-6">

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Admin Review View')
+@section('title', 'Admin | Review View')
 
 @section('content')
 <div class="container mx-auto p-6">

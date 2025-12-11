@@ -8,8 +8,8 @@
     <div class="bg-white shadow-lg rounded-lg p-4 w-full max-w-4xl">
         <!-- Page Header -->
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-indigo-700 flex items-center">
-                <i data-feather="user-plus" class="w-5 h-5 mr-2"></i> Create User
+            <h2 class="text-xl font-bold text-orange-700 flex items-center">
+                <i data-feather="user-plus" class="w-5 h-5 mr-2"></i> Add User
             </h2>
             <a href="{{ route('admin.users.index') }}" class="flex items-center text-gray-600 hover:text-indigo-700 text-sm">
                 <i data-feather="arrow-left" class="w-4 h-4 mr-1"></i> Back
@@ -51,12 +51,74 @@
                        class="w-full px-2 py-1 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
             </div>
 
-            <!-- Department -->
-            <div class="flex flex-col">
-                <label for="department" class="text-sm font-semibold text-gray-700 mb-1">Department</label>
-                <input type="text" name="department" id="department" value="{{ old('department') }}" placeholder="Optional"
-                       class="w-full px-2 py-1 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-            </div>
+           <!-- Department -->
+<div class="flex flex-col">
+    <label for="department" class="text-sm font-semibold text-gray-700 mb-1">
+        Department
+    </label>
+
+    <select name="department" id="department"
+            class="w-full px-2 py-1 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+
+        <option value="">Select User Department </option>
+
+        <option value="Data Protection" 
+            {{ old('department') == 'Data Protection' ? 'selected' : '' }}>
+            Data Protection
+        </option>
+
+        <option value="IT" 
+            {{ old('department') == 'IT' ? 'selected' : '' }}>
+            IT
+        </option>
+
+        <option value="HR" 
+            {{ old('department') == 'HR' ? 'selected' : '' }}>
+            HR
+        </option>
+
+        <option value="Community Engagement" 
+            {{ old('department') == 'Community Engagement' ? 'selected' : '' }}>
+            Community Engagement
+        </option>
+
+        <option value="Data & Biostatisitcs" 
+            {{ old('department') == 'Data & Biostatisitcs' ? 'selected' : '' }}>
+            Data & Biostatisitcs
+        </option>
+
+        <option value="Laboratory" 
+            {{ old('department') == 'Laboratory' ? 'selected' : '' }}>
+            Laboratory
+        </option>
+
+        <option value="Pharmacy" 
+            {{ old('department') == 'Pharmacy' ? 'selected' : '' }}>
+            Pharmacy
+        </option>
+
+        <option value="Finance & Administration" 
+            {{ old('department') == 'Finance & Administration' ? 'selected' : '' }}>
+            Finance & Administration
+        </option>
+
+        <option value="Clinical Operations (ClinOps)" 
+            {{ old('department') == 'Clinical Operations (ClinOps)' ? 'selected' : '' }}>
+            Clinical Operations (ClinOps)
+        </option>
+
+        <option value="Project Management" 
+            {{ old('department') == 'Project Management' ? 'selected' : '' }}>
+            Project Management
+        </option>
+
+        <option value="Legal & Compliance" 
+            {{ old('department') == 'Legal & Compliance' ? 'selected' : '' }}>
+            Legal & Compliance
+        </option>
+
+    </select>
+</div>
 
             <!-- Job Title -->
             <div class="flex flex-col">
@@ -92,8 +154,8 @@
 
             <!-- Buttons (full width) -->
             <div class="col-span-2 flex justify-end pt-2">
-                <button type="submit" class="flex items-center bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700 text-sm">
-                    <i data-feather="user-check" class="w-4 h-4 mr-1"></i> Create User
+                <button type="submit" class="flex items-center bg-orange-500 text-white px-4 py-1 rounded hover:bg-orange-700 text-sm">
+                    <i data-feather="user-check" class="w-4 h-4 mr-1"></i> Add User
                 </button>
             </div>
         </form>

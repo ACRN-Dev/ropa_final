@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Admin Ticket Management')
+@section('title', 'Admin | Ticket Management')
 
 @section('content')
 <div class="container mx-auto p-4 sm:p-6" x-data="ticketModal()">

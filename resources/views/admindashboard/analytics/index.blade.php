@@ -31,6 +31,7 @@
     <div class="mb-6 border-b">
         <nav class="flex flex-wrap space-x-2">
             <button class="tab-link px-4 py-2 bg-orange-50 text-orange-600 rounded-t-lg font-medium" data-tab="risk">Risk Overview</button>
+<button class="tab-link px-4 py-2 bg-orange-50 text-orange-600 rounded-t-lg font-medium" data-tab="tickets">Ticket Analytics</button>
             <button class="tab-link px-4 py-2 bg-gray-100 text-gray-600 rounded-t-lg font-medium" data-tab="user">User Analytics</button>
         </nav>
     </div>
@@ -106,6 +107,9 @@
                 </div>
             </div>
 
+
+            
+
             {{-- TABLE SECTION --}}
             <div class="bg-white shadow rounded p-6 mb-6 overflow-x-auto">
                 <h2 class="text-xl font-semibold mb-4">Submitted ROPA Records</h2>
@@ -170,6 +174,41 @@
             </div>
         </div>
 
+      {{-- Ticket Analytics Tab --}}
+<div id="tab-content-tickets" class="tab-content hidden">
+    <div class="bg-white shadow rounded p-6">
+        <h2 class="text-xl font-semibold mb-4">Ticket Analytics</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            {{-- Ticket Risk Level Distribution --}}
+            <div>
+                <h3 class="text-lg font-semibold mb-2">Ticket Risk Levels</h3>
+                <canvas id="ticketRiskChart" class="w-full h-64 md:h-80"></canvas>
+            </div>
+
+            {{-- Ticket Status Distribution --}}
+            <div>
+                <h3 class="text-lg font-semibold mb-2">Ticket Status</h3>
+                <canvas id="ticketStatusChart" class="w-full h-64 md:h-80"></canvas>
+            </div>
+
+            {{-- Assigned vs Unassigned Tickets --}}
+            <div>
+                <h3 class="text-lg font-semibold mb-2">Assigned vs Unassigned Tickets</h3>
+                <canvas id="ticketAssignedChart" class="w-full h-64 md:h-80"></canvas>
+            </div>
+
+            {{-- Tickets per User --}}
+            <div>
+                <h3 class="text-lg font-semibold mb-2">Tickets per User</h3>
+                <canvas id="ticketUserChart" class="w-full h-64 md:h-80"></canvas>
+            </div>
+
+        </div>
+    </div>
+</div>
+
         {{-- User Analytics Tab --}}
         <div id="tab-content-user" class="tab-content hidden">
             <div class="bg-white shadow rounded p-6">
@@ -210,25 +249,39 @@
 {{-- CHART JS --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script> <!-- Plugin for numbers -->
-
 <script>
+    // ---------------------------
     // TAB SWITCHING
+    // ---------------------------
     const tabLinks = document.querySelectorAll('.tab-link');
     const tabContents = document.querySelectorAll('.tab-content');
 
     tabLinks.forEach(link => {
         link.addEventListener('click', () => {
             const tab = link.dataset.tab;
+
+            // Hide all tab contents
             tabContents.forEach(c => c.classList.add('hidden'));
-            document.getElementById('tab-content-' + tab).classList.remove('hidden');
-            tabLinks.forEach(l => l.classList.remove('bg-orange-50', 'text-orange-600'));
-            tabLinks.forEach(l => l.classList.add('bg-gray-100', 'text-gray-600'));
+
+            // Show current tab content
+            const content = document.getElementById('tab-content-' + tab);
+            if(content) content.classList.remove('hidden');
+
+            // Reset tab button styles
+            tabLinks.forEach(l => {
+                l.classList.remove('bg-orange-50', 'text-orange-600');
+                l.classList.add('bg-gray-100', 'text-gray-600');
+            });
+
+            // Activate clicked tab
             link.classList.add('bg-orange-50', 'text-orange-600');
             link.classList.remove('bg-gray-100', 'text-gray-600');
         });
     });
 
+    // ---------------------------
     // RISK CHART
+    // ---------------------------
     const ctxRisk = document.getElementById('riskChart').getContext('2d');
     new Chart(ctxRisk, {
         type: 'doughnut',
@@ -242,17 +295,15 @@
         options: { 
             cutout: '60%',
             plugins: {
-                datalabels: {
-                    color: '#fff',
-                    formatter: (value) => value + '%',
-                    font: { weight: 'bold', size: 14 }
-                }
+                datalabels: { color: '#fff', formatter: v => v + '%', font: { weight: 'bold', size: 14 } }
             }
         },
         plugins: [ChartDataLabels]
     });
 
-    // USER ANALYTICS CHARTS
+    // ---------------------------
+    // USER ANALYTICS
+    // ---------------------------
     const users = @json(\App\Models\User::all());
 
     // User Type
@@ -261,17 +312,17 @@
     new Chart(document.getElementById('userTypeChart').getContext('2d'), {
         type: 'pie',
         data: { labels: ['Admin', 'User'], datasets: [{ data: [adminCount, normalCount], backgroundColor: ['#ef4444','#22c55e'] }] },
-        options: { plugins: { datalabels: { color: '#fff', formatter: v => v, font: { weight: 'bold', size: 14 } } } },
+        options: { plugins: { datalabels: { color:'#fff', formatter: v=>v, font:{weight:'bold',size:14} } } },
         plugins: [ChartDataLabels]
     });
 
-    // Department Distribution
+    // Users per Department
     const deptCounts = {};
     users.forEach(u => { const d = u.department || 'Unassigned'; deptCounts[d] = (deptCounts[d] || 0) + 1; });
     new Chart(document.getElementById('departmentChart').getContext('2d'), {
         type: 'bar',
-        data: { labels: Object.keys(deptCounts), datasets: [{ label: 'Users', data: Object.values(deptCounts), backgroundColor: '#3b82f6' }] },
-        options: { scales: { y: { beginAtZero: true } }, plugins: { datalabels: { anchor:'end', align:'end', color:'#000', font:{weight:'bold'} } } },
+        data: { labels: Object.keys(deptCounts), datasets: [{ label:'Users', data: Object.values(deptCounts), backgroundColor:'#3b82f6' }] },
+        options: { scales: { y:{ beginAtZero:true } }, plugins:{ datalabels:{ anchor:'end', align:'end', color:'#000' } } },
         plugins: [ChartDataLabels]
     });
 
@@ -280,8 +331,8 @@
     const inactiveCount = users.filter(u => !u.active).length;
     new Chart(document.getElementById('activeChart').getContext('2d'), {
         type: 'doughnut',
-        data: { labels: ['Active', 'Inactive'], datasets: [{ data: [activeCount, inactiveCount], backgroundColor: ['#10b981','#ef4444'] }] },
-        options: { plugins: { datalabels: { color:'#fff', formatter:v=>v, font:{weight:'bold', size:14} } } },
+        data: { labels: ['Active','Inactive'], datasets:[{ data:[activeCount,inactiveCount], backgroundColor:['#10b981','#ef4444'] }] },
+        options: { plugins:{ datalabels:{ color:'#fff', formatter:v=>v } } },
         plugins: [ChartDataLabels]
     });
 
@@ -290,9 +341,59 @@
     const twoFactorDisabled = users.filter(u => !u.two_factor_enabled).length;
     new Chart(document.getElementById('twoFactorChart').getContext('2d'), {
         type: 'doughnut',
-        data: { labels: ['2FA Enabled', '2FA Disabled'], datasets: [{ data: [twoFactorEnabled, twoFactorDisabled], backgroundColor: ['#6366f1','#facc15'] }] },
-        options: { plugins: { datalabels: { color:'#fff', formatter:v=>v, font:{weight:'bold', size:14} } } },
+        data: { labels:['2FA Enabled','2FA Disabled'], datasets:[{ data:[twoFactorEnabled,twoFactorDisabled], backgroundColor:['#6366f1','#facc15'] }] },
+        options: { plugins:{ datalabels:{ color:'#fff', formatter:v=>v } } },
         plugins: [ChartDataLabels]
     });
+
+    // ---------------------------
+    // TICKET ANALYTICS (RopaIssue)
+    // ---------------------------
+    const tickets = @json(\App\Models\RopaIssue::with('user')->get());
+
+    // Ticket Risk Levels
+    const riskLevels = ['critical','high','medium','low'];
+    const riskCounts = riskLevels.map(level => tickets.filter(t => t.risk_level === level).length);
+    new Chart(document.getElementById('ticketRiskChart').getContext('2d'), {
+        type: 'doughnut',
+        data: { labels:['Critical','High','Medium','Low'], datasets:[{ data:riskCounts, backgroundColor:['#7f1d1d','#ef4444','#facc15','#22c55e'] }] },
+        options: { cutout:'60%', plugins:{ datalabels:{ color:'#fff', formatter:v=>v } } },
+        plugins:[ChartDataLabels]
+    });
+
+    // Ticket Status
+    const statuses = ['open','resolved'];
+    const statusCounts = statuses.map(s => tickets.filter(t => t.status === s).length);
+    new Chart(document.getElementById('ticketStatusChart').getContext('2d'), {
+        type:'bar',
+        data:{ labels:['Open','Resolved'], datasets:[{ data:statusCounts, backgroundColor:['#ef4444','#22c55e'] }] },
+        options:{ scales:{ y:{ beginAtZero:true } }, plugins:{ datalabels:{ anchor:'end', align:'end', color:'#000' } } },
+        plugins:[ChartDataLabels]
+    });
+
+    // Assigned vs Unassigned
+    const assignedCount = tickets.filter(t => t.user).length;
+    const unassignedCount = tickets.filter(t => !t.user).length;
+    new Chart(document.getElementById('ticketAssignedChart').getContext('2d'), {
+        type:'doughnut',
+        data:{ labels:['Assigned','Unassigned'], datasets:[{ data:[assignedCount,unassignedCount], backgroundColor:['#3b82f6','#facc15'] }] },
+        options:{ plugins:{ datalabels:{ color:'#fff', formatter:v=>v } } },
+        plugins:[ChartDataLabels]
+    });
+
+    // Tickets per User
+    const userTicketCounts = {};
+    tickets.forEach(t => {
+        const name = t.user?.name || 'Unassigned';
+        userTicketCounts[name] = (userTicketCounts[name] || 0) + 1;
+    });
+    new Chart(document.getElementById('ticketUserChart').getContext('2d'), {
+        type:'bar',
+        data:{ labels:Object.keys(userTicketCounts), datasets:[{ label:'Tickets', data:Object.values(userTicketCounts), backgroundColor:'#10b981' }] },
+        options:{ scales:{ y:{ beginAtZero:true } }, plugins:{ datalabels:{ anchor:'end', align:'end', color:'#000' } } },
+        plugins:[ChartDataLabels]
+    });
 </script>
+
+
 @endsection

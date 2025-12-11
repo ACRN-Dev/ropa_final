@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'View ROPA Record')
+@section('title', 'User | View ROPA Record')
 
 @section('content')
 <div class="container mx-auto p-6">
