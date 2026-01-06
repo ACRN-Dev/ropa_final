@@ -10,6 +10,20 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind Custom Color -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        sidebar: '#071a32'
+                    }
+                }
+            }
+        }
+    </script>
+
     <script src="https://unpkg.com/feather-icons"></script>
 </head>
 
@@ -18,7 +32,7 @@
 <div class="flex min-h-screen">
 
     <!-- STATIC SIDEBAR -->
-    <aside class="w-48 bg-orange-500 text-white p-4 flex flex-col items-center fixed top-0 left-0 h-full overflow-y-auto">
+    <aside class="w-48 bg-sidebar text-white p-4 flex flex-col items-center fixed top-0 left-0 h-full overflow-y-auto">
 
         <!-- Logo -->
         <div class="mb-6">
@@ -31,8 +45,8 @@
             <!-- Dashboard -->
             <li class="mb-2">
                 <a href="{{ route('admin.dashboard') }}"
-                   class="flex items-center py-2 px-3 rounded hover:bg-orange-400 
-                   {{ request()->routeIs('admin.dashboard') ? 'bg-orange-600' : '' }}">
+                   class="flex items-center py-2 px-3 rounded hover:bg-sidebar/80 
+                   {{ request()->routeIs('admin.dashboard') ? 'bg-sidebar/90' : '' }}">
                     <i data-feather="home" class="w-5 h-5 mr-2"></i> Dashboard
                 </a>
             </li>
@@ -40,8 +54,8 @@
             <!-- Assessments -->
             <li class="mb-2">
                 <a href="{{ route('admin.reviews.index') }}"
-                   class="flex items-center py-2 px-3 rounded hover:bg-orange-400
-                   {{ request()->routeIs('admin.reviews.index') ? 'bg-orange-600' : '' }}">
+                   class="flex items-center py-2 px-3 rounded hover:bg-sidebar/80
+                   {{ request()->routeIs('admin.reviews.index') ? 'bg-sidebar/90' : '' }}">
                     <i data-feather="file-text" class="w-5 h-5 mr-2"></i> Assessments
                 </a>
             </li>
@@ -49,27 +63,26 @@
             <!-- Analytics -->
             <li class="mb-2">
                 <a href="{{ route('admin.analytics') }}"
-                   class="flex items-center py-2 px-3 rounded hover:bg-orange-400
-                   {{ request()->routeIs('admin.analytics') ? 'bg-orange-600' : '' }}">
+                   class="flex items-center py-2 px-3 rounded hover:bg-sidebar/80
+                   {{ request()->routeIs('admin.analytics') ? 'bg-sidebar/90' : '' }}">
                     <i data-feather="bar-chart-2" class="w-5 h-5 mr-2"></i> Analytics
                 </a>
             </li>
 
-          
-
-            <!-- Manage -->
+            <!-- Manage Tickets -->
             <li class="mb-2">
                 <a href="{{ route('admin.tickets.index') }}"
-                   class="flex items-center py-2 px-3 rounded hover:bg-orange-400
-                   {{ request()->routeIs('admin.tickets.index') ? 'bg-orange-600' : '' }}">
+                   class="flex items-center py-2 px-3 rounded hover:bg-sidebar/80
+                   {{ request()->routeIs('admin.tickets.index') ? 'bg-sidebar/90' : '' }}">
                     <i data-feather="tag" class="w-4 h-4 mr-2"></i> Manage Tickets
                 </a>
             </li>
 
+            <!-- Manage Users -->
             <li class="mb-2">
                 <a href="{{ route('admin.users.index') }}"
-                   class="flex items-center py-2 px-3 rounded hover:bg-orange-400
-                   {{ request()->routeIs('admin.users.index') ? 'bg-orange-600' : '' }}">
+                   class="flex items-center py-2 px-3 rounded hover:bg-sidebar/80
+                   {{ request()->routeIs('admin.users.index') ? 'bg-sidebar/90' : '' }}">
                     <i data-feather="users" class="w-4 h-4 mr-2"></i> Manage Users
                 </a>
             </li>
@@ -79,7 +92,7 @@
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit"
-                            class="w-full flex items-center py-2 px-3 rounded hover:bg-orange-400 text-left">
+                            class="w-full flex items-center py-2 px-3 rounded hover:bg-sidebar/80 text-left">
                         <i data-feather="log-out" class="w-5 h-5 mr-2"></i> Sign Out
                     </button>
                 </form>

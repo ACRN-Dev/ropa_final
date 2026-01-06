@@ -66,7 +66,7 @@
         ];
     @endphp
 
-    <div x-data="reviewData(@json($review->risks), {{ $review->overall_risk_score ?? 0 }}, '{{ $review->impact_level ?? '' }}')" x-cloak class="bg-white rounded-lg shadow-lg">
+    <div x-data="reviewData(@json($review->risks ?? []), {{ $review->overall_risk_score ?? 0 }}, '{{ $review->impact_level ?? '' }}')" x-cloak class="bg-white rounded-lg shadow-lg">
         <div class="flex border-b border-gray-200">
             <button @click="tab='details'" :class="tab==='details' ? 'border-orange-500 text-orange-600' : 'text-gray-600'"
                     class="px-4 py-2 font-medium border-b-2 focus:outline-none">
@@ -92,14 +92,14 @@
                     @foreach ($sections as $section)
                         @php
                             $value = $ropa->{$section};
-                            $skipIfEmpty = ['technical_measures_other', 'lawful_basis_other', 'organisational_measures_other'];
-                            if (in_array($section, $skipIfEmpty) && empty($value)) continue;
+                            $skipIfEmpty = ['technical_measures_other','lawful_basis_other','organisational_measures_other'];
+                            if (in_array($section,$skipIfEmpty) && empty($value)) continue;
                         @endphp
 
                         <div class="bg-gray-50 shadow rounded-xl p-5 flex flex-col gap-2 hover:shadow-lg transition transform hover:scale-105">
                             <div class="flex items-center gap-2 mb-2">
                                 <i data-feather="{{ $icons[$section] ?? 'circle' }}" class="w-5 h-5 text-orange-500"></i>
-                                <h4 class="font-semibold text-gray-800">{{ ucwords(str_replace('_', ' ', $section)) }}</h4>
+                                <h4 class="font-semibold text-gray-800">{{ ucwords(str_replace('_',' ',$section)) }}</h4>
                             </div>
                             <p class="text-gray-600 text-sm">{!! renderValue($value) !!}</p>
                         </div>
@@ -109,8 +109,6 @@
                 {{-- Compliance Documents --}}
                 <div class="bg-white shadow-lg rounded-xl p-5 mb-6">
                     <div class="space-y-4">
-
-                        {{-- FIXED FIELD NAME --}}
                         @if ($review->data_processing_agreement_file)
                             <a href="{{ asset('storage/'.$review->data_processing_agreement_file) }}" target="_blank"
                                class="flex items-center gap-2 text-blue-600 hover:underline">
@@ -118,21 +116,19 @@
                             </a>
                         @endif
 
-                        {{-- FIXED FIELD NAME --}}
                         @if ($review->data_protection_impact_assessment_file)
                             <a href="{{ asset('storage/'.$review->data_protection_impact_assessment_file) }}" target="_blank"
                                class="flex items-center gap-2 text-blue-600 hover:underline">
                                 <i data-feather="file-text" class="w-4 h-4"></i> View Data Protection Impact Assessment (DPIA)
                             </a>
                         @endif
-
                     </div>
                 </div>
             </div>
 
             {{-- Risk Tab --}}
             <div x-show="tab==='risk'" class="space-y-6">
-               <form action="{{ route('admin.reviews.update', $review->id) }}" method="POST" enctype="multipart/form-data" @submit.prevent="submitForm()">
+                <form id="reviewForm" action="{{ route('admin.reviews.update',$review->id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
 
@@ -155,35 +151,31 @@
                         </div>
 
                         <input type="hidden" name="ropa_id" value="{{ $review->ropa_id }}">
-
-                        <div class="flex flex-col gap-2 md:col-span-2">
-                            <label class="font-medium">Data Sharing Agreement (Upload or Link)</label>
-                            <input type="file" name="data_sharing_agreement" class="border border-gray-300 rounded-lg px-3 py-2">
-                            @if ($review->data_sharing_agreement)
-                                <a href="{{ asset('storage/'.$review->data_sharing_agreement) }}" target="_blank"
-                                   class="text-blue-600 hover:underline mt-1">View Existing Document</a>
-                            @endif
-                        </div>
                     </div>
 
                     {{-- RISK LOOP --}}
-                    <div class="space-y-4 mt-4">
+                    <div class="space-y-4 mt-6">
                         <template x-for="(risk, index) in risks" :key="index">
-                            <div class="p-4 border border-gray-200 rounded-lg flex flex-col gap-2 bg-gray-50">
-                                <div class="flex flex-col md:flex-row gap-2 md:items-center">
+                            <div class="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                                <div class="flex flex-col md:flex-row gap-3 md:items-center">
+
                                     <input type="text" :name="'risks['+index+'][name]'" x-model="risk.name"
                                            placeholder="Risk Name"
                                            class="border border-gray-300 rounded-lg px-3 py-2 flex-1">
 
-                                    <input type="number" min="1" max="5" :name="'risks['+index+'][probability]'" x-model.number="risk.probability"
+                                    <input type="number" min="1" max="5"
+                                           :name="'risks['+index+'][probability]'"
+                                           x-model.number="risk.probability"
                                            @input="calculateScore()"
-                                           placeholder="Probability"
-                                           class="border border-gray-300 rounded-lg px-3 py-2 w-32">
+                                           class="border border-gray-300 rounded-lg px-3 py-2 w-32"
+                                           placeholder="Probability">
 
-                                    <input type="number" min="1" max="5" :name="'risks['+index+'][impact]'" x-model.number="risk.impact"
+                                    <input type="number" min="1" max="5"
+                                           :name="'risks['+index+'][impact]'"
+                                           x-model.number="risk.impact"
                                            @input="calculateScore()"
-                                           placeholder="Impact"
-                                           class="border border-gray-300 rounded-lg px-3 py-2 w-32">
+                                           class="border border-gray-300 rounded-lg px-3 py-2 w-32"
+                                           placeholder="Impact">
 
                                     <button type="button" @click="removeRisk(index)"
                                             class="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600">
@@ -207,8 +199,14 @@
                                   placeholder="Describe mitigation measures">{{ $review->mitigation_measures }}</textarea>
                     </div>
 
+                    {{-- Hidden score --}}
+                    <input type="hidden" name="overall_risk_score" x-model="overallScore">
+                    <input type="hidden" name="impact_level" x-model="impactLevel">
+
                     <div class="mt-4">
-                        <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">
+                        <button type="submit"
+                                @click.prevent="submitForm()"
+                                class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">
                             Save
                         </button>
                     </div>
@@ -219,7 +217,7 @@
             <div x-show="tab==='score'" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <template x-for="(risk, index) in risks" :key="index">
-                        <div class="p-4 border border-gray-200 rounded-lg flex flex-col gap-2 bg-gray-50">
+                        <div class="p-4 border border-gray-200 rounded-lg bg-gray-50">
                             <p class="font-medium">Risk: <span x-text="risk.name || 'Unnamed Risk'"></span></p>
                             <p>Probability: <span x-text="risk.probability"></span></p>
                             <p>Impact: <span x-text="risk.impact"></span></p>
@@ -229,8 +227,10 @@
                 </div>
 
                 <div class="mt-4 p-4 border border-gray-300 rounded-lg bg-gray-100">
-                    <p class="font-bold text-lg">Overall Risk Score: <span x-text="overallScore + '%'"></span></p>
-                    <p class="font-bold text-lg">Impact Level: <span x-text="impactLevel"></span></p>
+                    <p class="font-bold text-lg">Overall Risk Score:
+                        <span x-text="overallScore + '%'"></span></p>
+                    <p class="font-bold text-lg">Impact Level:
+                        <span x-text="impactLevel"></span></p>
                 </div>
             </div>
 
@@ -246,18 +246,29 @@
     function reviewData(existingRisks = [], initialScore = 0, initialLevel = '') {
         return {
             tab: 'details',
-            risks: existingRisks.map(r => ({ ...r, probability: r.probability || 1, impact: r.impact || 1 })),
-            overallScore: parseInt(initialScore),
+
+            risks: existingRisks.map(r => ({
+                name: r.name || '',
+                probability: Number(r.probability) || 1,
+                impact: Number(r.impact) || 1
+            })),
+
+            overallScore: Number(initialScore),
             impactLevel: initialLevel || '',
+
             calculateScore() {
                 if (!this.risks.length) {
                     this.overallScore = 0;
-                    this.impactLevel = '';
+                    this.impactLevel = 'Low';
                     return;
                 }
-                const totalScore = this.risks.reduce((sum, r) => sum + (r.probability * r.impact), 0);
-                const maxScore = this.risks.length * 5 * 5;
-                const percent = Math.round((totalScore / maxScore) * 100);
+
+                const total = this.risks.reduce((sum, r) =>
+                    sum + (r.probability * r.impact), 0);
+
+                const max = this.risks.length * 25; // 5*5
+                const percent = Math.round((total / max) * 100);
+
                 this.overallScore = percent;
 
                 if (percent <= 20) this.impactLevel = 'Low';
@@ -265,19 +276,23 @@
                 else if (percent <= 80) this.impactLevel = 'High';
                 else this.impactLevel = 'Critical';
             },
+
             addRisk() {
                 this.risks.push({ name: '', probability: 1, impact: 1 });
                 this.calculateScore();
             },
+
             removeRisk(index) {
                 this.risks.splice(index, 1);
                 this.calculateScore();
             },
+
             submitForm() {
                 this.calculateScore();
-                this.$root.querySelector('form').submit();
+                document.getElementById('reviewForm').submit();
             }
         }
     }
 </script>
+
 @endsection

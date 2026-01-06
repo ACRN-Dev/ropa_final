@@ -145,13 +145,6 @@ public function index(Request $request)
             'ropa_id' => $ropa->id,
             'user_id' => null,
             'comment' => null,
-            'score' => 0,
-            'section_scores' => array_fill_keys([
-                'organisation_information','department_information','processes','data_sources',
-                'data_formats','information_nature','personal_data_categories','records_count',
-                'data_volume','retention_period','access_estimate','sharing','access_control',
-                'technical_measures','organisational_measures','lawful_basis','risk_report'
-            ], 0),
             'data_processing_agreement' => false,
             'data_protection_impact_assessment' => false,
         ]);

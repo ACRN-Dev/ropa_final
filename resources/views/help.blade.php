@@ -74,7 +74,7 @@
                     Need more assistance?
                 </summary>
                 <p class="mt-2 text-gray-700 dark:text-gray-300">
-                    Contact <a href="mailto:support@example.com" class="text-blue-600 underline">support@example.com</a> with your query. Include your user ID and record details for faster support.
+                    Contact <a href="mailto:support@example.com" class="text-blue-600 underline">coms@acrn.com</a> with your query. Include your user ID and record details for faster support.
                 </p>
             </details>
         </div>

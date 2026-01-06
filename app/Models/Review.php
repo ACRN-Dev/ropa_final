@@ -11,14 +11,16 @@ class Review extends Model
 {
     use HasFactory;
 
+    const STATUS_PENDING     = 'Pending';
+    const STATUS_IN_PROGRESS = 'In Progress';
+    const STATUS_REVIEWED    = 'Reviewed';
+
     protected $fillable = [
         'ropa_id',
         'user_id',
         'comment',
-        'score',
-        'section_scores',
         'data_processing_agreement_file',
-        'data_protection_impact_assessment_file',
+        'data_protection_dpi_file',
         'data_sharing_agreement',
         'risks',
         'mitigation_measures',
@@ -26,6 +28,8 @@ class Review extends Model
         'impact_level',
         'children_data_transfer',
         'vulnerable_population_transfer',
+        'section_scores',
+        'status', // ⭐ ADDED
     ];
 
     protected $casts = [
@@ -35,39 +39,39 @@ class Review extends Model
         'vulnerable_population_transfer' => 'boolean',
     ];
 
-    /** Review belongs to a ROPA */
+    /** Relationships */
     public function ropa()
     {
         return $this->belongsTo(Ropa::class);
     }
 
-    /** Review belongs to a user (admin reviewer) */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    /** Review has many comments */
     public function comments()
     {
         return $this->hasMany(Comment::class);
     }
 
-    /** Total Score = sum of all section scores */
+    /** -------------------------
+     * SECTION SCORE CALCULATIONS
+     * ------------------------- */
+
     public function getTotalScoreAttribute()
     {
-        if (!$this->section_scores) {
+        if (!is_array($this->section_scores)) {
             return 0;
         }
 
-        return array_sum($this->section_scores);
+        return array_sum(array_filter($this->section_scores, 'is_numeric'));
     }
 
-    /** Average Score = mean of section scores */
     public function getAverageScoreAttribute()
     {
-        if (!$this->section_scores || !is_array($this->section_scores)) {
-            return null;
+        if (!is_array($this->section_scores)) {
+            return 0;
         }
 
         $scores = array_filter($this->section_scores, 'is_numeric');
@@ -79,27 +83,51 @@ class Review extends Model
         return round(array_sum($scores) / count($scores), 2);
     }
 
-    /** Overall Risk Score as percentage (calculated from risks) */
+    /** -------------------------
+     * RISK SCORING CALCULATIONS
+     * ------------------------- */
+
     public function getCalculatedOverallRiskScoreAttribute()
     {
-        if (!$this->risks || !is_array($this->risks)) {
+        if (!is_array($this->risks) || count($this->risks) === 0) {
             return 0;
         }
 
-        $totalScore = array_sum(array_map(fn($r) => ($r['probability'] ?? 1) * ($r['impact'] ?? 1), $this->risks));
-        $maxScore = count($this->risks) * 5 * 5; // max 5 probability * 5 impact per risk
+        $riskScores = array_map(function ($risk) {
+            $prob = isset($risk['probability']) ? (int)$risk['probability'] : 1;
+            $impact = isset($risk['impact']) ? (int)$risk['impact'] : 1;
+            return $prob * $impact;
+        }, $this->risks);
 
-        return $maxScore > 0 ? round(($totalScore / $maxScore) * 100) : 0;
+        $totalScore = array_sum($riskScores);
+        $maxScore = count($this->risks) * 25; // 5 × 5
+
+        if ($maxScore === 0) {
+            return 0;
+        }
+
+        return round(($totalScore / $maxScore) * 100);
     }
 
-    /** Calculate Impact Level based on overall risk score */
     public function getCalculatedImpactLevelAttribute()
     {
         $percent = $this->calculated_overall_risk_score;
 
-        if ($percent <= 20) return 'Low';
-        if ($percent <= 60) return 'Medium';
-        if ($percent <= 80) return 'High';
-        return 'Critical';
+        return match (true) {
+            $percent <= 20 => 'Low',
+            $percent <= 60 => 'Medium',
+            $percent <= 80 => 'High',
+            default        => 'Critical',
+        };
+    }
+
+    /** -------------------------
+     * STATUS HANDLING
+     * ------------------------- */
+
+    // Default value helper
+    public function getStatusAttribute($value)
+    {
+        return $value ?? self::STATUS_PENDING;
     }
 }

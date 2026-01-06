@@ -14,8 +14,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
-
-
 class ReviewController extends Controller
 {
     /**
@@ -25,6 +23,7 @@ class ReviewController extends Controller
     {
         $query = Review::with(['user', 'ropa']);
 
+        // SEARCH
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($qr) use ($search) {
@@ -33,6 +32,7 @@ class ReviewController extends Controller
             });
         }
 
+        // FILTERS
         if ($request->filled('dpa')) {
             $query->where('data_processing_agreement', $request->dpa);
         }
@@ -41,6 +41,7 @@ class ReviewController extends Controller
             $query->where('data_protection_impact_assessment', $request->dpia);
         }
 
+        // SORTING
         if ($request->filled('sort')) {
             switch ($request->sort) {
                 case 'score_high':
@@ -59,13 +60,14 @@ class ReviewController extends Controller
             $query->orderBy('created_at', 'desc');
         }
 
+        // PAGINATION
         $reviews = $query->paginate(10)->withQueryString();
 
         return view('admindashboard.review.index', compact('reviews'));
     }
 
     /**
-     * ADMIN: Show a specific review
+     * ADMIN: Show single review — mark as IN PROGRESS if opened by admin
      */
     public function show($id)
     {
@@ -75,10 +77,20 @@ class ReviewController extends Controller
             'comments.user'
         ])->findOrFail($id);
 
-        $review->section_scores = is_array($review->section_scores) ? $review->section_scores : [];
+        $review->section_scores = is_array($review->section_scores)
+            ? $review->section_scores
+            : [];
 
-        if (!$review->user_id && auth()->check()) {
-            $review->user_id = auth()->id();
+        // AUTO-ASSIGN reviewer & update status if needed
+        if (auth()->check()) {
+            if (!$review->user_id) {
+                $review->user_id = auth()->id();
+            }
+
+            if ($review->status === 'Pending') {
+                $review->status = 'In Progress';
+            }
+
             $review->save();
         }
 
@@ -86,103 +98,88 @@ class ReviewController extends Controller
     }
 
     /**
-     * ADMIN: Update section scores and risk-related fields
-     * 
-     * 
+     * ADMIN: Update Review — mark as REVIEWED
      */
+    public function update(Request $request, $id)
+    {
+        try {
+            DB::beginTransaction();
 
+            $review = Review::with('ropa')->findOrFail($id);
 
-    
-public function update(Request $request, $id)
-{
-    try {
-        DB::beginTransaction();
+            // VALIDATION
+            $validated = $request->validate([
+                'risks.*.name' => 'required|string|max:255',
+                'risks.*.probability' => 'required|numeric|min:1|max:5',
+                'risks.*.impact' => 'required|numeric|min:1|max:5',
 
-        $review = Review::with('ropa')->findOrFail($id);
+                'mitigation_measures' => 'nullable|string',
 
-        // Validate incoming data
-        $validated = $request->validate([
-            'risks.*.name' => 'required|string|max:255',
-            'risks.*.probability' => 'required|numeric|min:1|max:5',
-            'risks.*.impact' => 'required|numeric|min:1|max:5',
+                'children_data_transfer' => 'nullable|boolean',
+                'vulnerable_population_transfer' => 'nullable|boolean',
 
-            'mitigation_measures' => 'nullable|string',
+                'data_processing_agreement' => 'nullable|file|mimes:pdf,doc,docx',
+                'data_protection_impact_assessment' => 'nullable|file|mimes:pdf,doc,docx',
+                'data_sharing_agreement' => 'nullable|file|mimes:pdf,doc,docx',
 
-            'children_data_transfer' => 'nullable|boolean',
-            'vulnerable_population_transfer' => 'nullable|boolean',
+                'ropa_id' => 'nullable|exists:ropas,id',
+            ]);
 
-            // Must match actual DB columns
-            'data_processing_agreement' => 'nullable|file|mimes:pdf,doc,docx',
-            'data_protection_impact_assessment' => 'nullable|file|mimes:pdf,doc,docx',
-            'data_sharing_agreement' => 'nullable|file|mimes:pdf,doc,docx',
-
-            'ropa_id' => 'nullable|exists:ropas,id',
-        ]);
-
-        // Ensure ROPA is not accidentally cleared
-        if ($request->filled('ropa_id')) {
-            $review->ropa_id = $validated['ropa_id'];
-        }
-
-        // Handle risks - save as JSON
-        if (isset($validated['risks'])) {
-            $review->risks = json_encode($validated['risks']);
-        }
-
-        // Mitigation measures
-        $review->mitigation_measures =
-            $validated['mitigation_measures'] ?? $review->mitigation_measures;
-
-        // Data transfer booleans
-        $review->children_data_transfer =
-            $validated['children_data_transfer'] ?? $review->children_data_transfer ?? 0;
-
-        $review->vulnerable_population_transfer =
-            $validated['vulnerable_population_transfer'] ?? $review->vulnerable_population_transfer ?? 0;
-
-        // Correct file upload handling
-        $fileFields = [
-            'data_processing_agreement',
-            'data_protection_impact_assessment',
-            'data_sharing_agreement'
-        ];
-
-        foreach ($fileFields as $field) {
-            if ($request->hasFile($field)) {
-                $review->$field = $request->file($field)->store('reviews', 'public');
+            // UPDATE ROPA LINK
+            if ($request->filled('ropa_id')) {
+                $review->ropa_id = $validated['ropa_id'];
             }
+
+            // RISKS → JSON
+            if (isset($validated['risks'])) {
+                $review->risks = json_encode($validated['risks']);
+            }
+
+            // TEXT FIELDS
+            $review->mitigation_measures =
+                $validated['mitigation_measures'] ?? $review->mitigation_measures;
+
+            // CHECKBOXES
+            $review->children_data_transfer =
+                $validated['children_data_transfer'] ?? 0;
+
+            $review->vulnerable_population_transfer =
+                $validated['vulnerable_population_transfer'] ?? 0;
+
+            // FILE UPLOADS
+            foreach ([
+                'data_processing_agreement',
+                'data_protection_impact_assessment',
+                'data_sharing_agreement'
+            ] as $field) {
+                if ($request->hasFile($field)) {
+                    $review->$field = $request->file($field)->store('reviews', 'public');
+                }
+            }
+
+            // MARK REVIEW AS COMPLETED
+            $review->status = 'Reviewed';
+
+            $review->save();
+
+            DB::commit();
+
+            return redirect()
+                ->route('admin.reviews.show', $review->id)
+                ->with('success', 'Review updated and marked as Reviewed.');
+
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            DB::rollBack();
+            return back()->withErrors($ve->errors())->withInput();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error($e->getMessage());
+            return back()->with('error', 'Unexpected error. Please check logs.');
         }
-
-        $review->save();
-
-        // Reload ROPA after save
-        $review->load('ropa');
-
-        DB::commit();
-
-        return redirect()
-            ->route('admin.reviews.show', $review->id)
-            ->with('success', 'Review updated successfully.');
-
-    } catch (\Illuminate\Validation\ValidationException $ve) {
-
-        DB::rollBack();
-
-        return back()
-            ->withErrors($ve->errors())
-            ->withInput();
-
-    } catch (\Exception $e) {
-
-        DB::rollBack();
-
-        return back()->with('error', 'An unexpected error occurred. Please check logs.');
     }
-}
-
 
     /**
-     * ADMIN: Update compliance checkboxes (DPA / DPIA)
+     * ADMIN: Update compliance checkboxes
      */
     public function updateCompliance(Request $request, $id)
     {
@@ -211,7 +208,7 @@ public function update(Request $request, $id)
     }
 
     /**
-     * Export reviews to Excel
+     * Export to Excel
      */
     public function export()
     {
@@ -219,7 +216,7 @@ public function update(Request $request, $id)
     }
 
     /**
-     * Dashboard: risk summary
+     * Risk Dashboard (Old Logic)
      */
     public function reviewRiskDashboard()
     {
@@ -231,35 +228,32 @@ public function update(Request $request, $id)
         $medium   = $reviews->filter(fn($r) => $r->total_score > 100 && $r->total_score <= 160)->count();
         $low      = $reviews->filter(fn($r) => $r->total_score > 160)->count();
 
-        $criticalRisk = round(($critical / $total) * 100, 1);
-        $highRisk     = round(($high / $total) * 100, 1);
-        $mediumRisk   = round(($medium / $total) * 100, 1);
-        $lowRisk      = round(($low / $total) * 100, 1);
-
-        return view('admindashboard.dashboard', compact(
-            'criticalRisk', 'highRisk', 'mediumRisk', 'lowRisk', 'reviews'
-        ));
+        return view('admindashboard.dashboard', [
+            'criticalRisk' => round(($critical / $total) * 100, 1),
+            'highRisk'     => round(($high / $total) * 100, 1),
+            'mediumRisk'   => round(($medium / $total) * 100, 1),
+            'lowRisk'      => round(($low / $total) * 100, 1),
+            'reviews'      => $reviews,
+        ]);
     }
 
     /**
-     * Add comment to a review
+     * Add comment
      */
     public function addComment(Request $request, Review $review)
     {
-        $request->validate([
-            'content' => 'required|string|max:1000',
-        ]);
+        $request->validate(['content' => 'required|string|max:1000']);
 
         $review->comments()->create([
             'user_id' => auth()->id(),
-            'content' => $request->input('content'),
+            'content' => $request->content,
         ]);
 
-        return redirect()->back()->with('success', 'Comment added successfully.');
+        return back()->with('success', 'Comment added successfully.');
     }
 
     /**
-     * Delete a comment
+     * Delete comment
      */
     public function deleteComment(Comment $comment)
     {
