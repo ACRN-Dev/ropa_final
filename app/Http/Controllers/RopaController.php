@@ -454,4 +454,14 @@ public function sendEmail(Request $request, $id)
 }
 
 
+
+public function review($id)
+{
+    // Example: fetch a ROPA record and show a view
+    $record = Ropa::findOrFail($id);
+    return view('ropa.review', compact('record'));
+}
+
+
+
 }
