@@ -49,7 +49,7 @@
             <label class="block font-semibold mb-1">Organisation Name</label>
             <select name="organisation_name" id="organisation_name" class="w-full border rounded-lg p-2">
                 <option value="">-- Select Organisation --</option>
-                @foreach(['Mutala Trust','Infectious Diseases Research Lab','Clinresco','Other'] as $org)
+                @foreach(['Mutala Trust','Infectious Diseases Research Lab','Clinresco', 'Charles River Medical Group'] as $org)
                     <option value="{{ $org }}" {{ old('organisation_name') == $org ? 'selected' : '' }}>
                         {{ $org }}
                     </option>
