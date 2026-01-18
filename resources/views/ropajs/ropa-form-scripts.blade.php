@@ -133,6 +133,49 @@ document.addEventListener("DOMContentLoaded", function() {
     addField('add_other_department','other_department_container','other_department[]','Enter department name');
 
     // -----------------------------
+    // Handle "I do not know" checkbox behavior
+    // When "I do not know" is selected, uncheck all other options in the group
+    // When any other option is selected, uncheck "I do not know"
+    // -----------------------------
+    const checkboxGroups = [
+        'data_sources[]',
+        'data_formats[]',
+        'personal_data_categories[]',
+        'technical_measures[]',
+        'organisational_measures[]',
+        'lawful_basis[]'
+    ];
+
+    checkboxGroups.forEach(groupName => {
+        const checkboxes = document.querySelectorAll(`input[name="${groupName}"]`);
+        const idkCheckbox = Array.from(checkboxes).find(cb => cb.value === 'I do not know');
+        
+        if (!idkCheckbox) return;
+
+        // When "I do not know" is checked, uncheck all others
+        idkCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                checkboxes.forEach(cb => {
+                    if (cb !== idkCheckbox) {
+                        cb.checked = false;
+                    }
+                });
+            }
+        });
+
+        // When any other checkbox is checked, uncheck "I do not know"
+        checkboxes.forEach(cb => {
+            if (cb !== idkCheckbox) {
+                cb.addEventListener('change', function() {
+                    if (this.checked) {
+                        idkCheckbox.checked = false;
+                    }
+                });
+            }
+        });
+    });
+
+    // -----------------------------
     // Remove empty fields on submit
     // -----------------------------
     const form = document.querySelector('form');
