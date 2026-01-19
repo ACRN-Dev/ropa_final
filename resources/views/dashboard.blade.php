@@ -4,53 +4,6 @@
 
 @section('content')
 
-<!-- Top Navigation -->
-<nav class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-    <div class="container mx-auto px-4 flex justify-between items-center h-16">
-        <!-- Left: Logo / Brand -->
-        <div class="flex items-center space-x-3">
-            <i data-feather="layers" class="w-6 h-6 text-orange-500"></i>
-            <span class="font-bold text-xl text-gray-800 dark:text-gray-100">Dashboard</span>
-        </div>
-
-
-        <!-- Right: Notification + User Dropdown -->
-        <div class="flex items-center space-x-6">
-            <!-- Notification -->
-            <div class="relative">
-               
-            </div>
-
-
-            
-            <!-- User Dropdown -->
-            <div class="relative">
-                <button id="userMenuButton" class="flex items-center space-x-2 focus:outline-none">
-                    <i data-feather="user" class="w-6 h-6 text-gray-600 dark:text-gray-300"></i>
-                    <span class="text-gray-700 dark:text-gray-300">{{ Auth::user()->name }}</span>
-                    <i data-feather="chevron-down" class="w-4 h-4 text-gray-600 dark:text-gray-300"></i>
-                </button>
-                <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 shadow-lg rounded-lg py-2 z-50">
-                    <a href="#" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                        <i data-feather="user" class="w-4 h-4 text-orange-500"></i>
-                        Profile
-                    </a>
-
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                            <i data-feather="log-out" class="w-4 h-4 text-red-500"></i>
-                            Logout
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</nav>
-
-
-
 <!-- Main Dashboard -->
 <div class="container mx-auto py-6">
 

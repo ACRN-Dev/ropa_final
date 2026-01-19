@@ -4,30 +4,7 @@
 
 @section('content')
 <div class="min-h-screen bg-gray-50">
-    <!-- Top Navigation Bar -->
-    <nav class="bg-white shadow-md mb-6">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <!-- Logo -->
-            <div class="flex items-center space-x-3">
-                <img src="{{ asset('logo.jpg') }}" alt="Logo" class="h-10 w-10 rounded-full shadow">
-                <h1 class="text-xl font-bold text-orange-500"></h1>
-            </div>
-
-            <!-- User Info & Logout -->
-            <div class="flex items-center space-x-4">
-                <span class="text-gray-700 font-medium">{{ auth()->user()->name }}</span>
-                <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-orange-500">
-                    <i data-feather="home" class="w-5 h-5"></i>
-                </a>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="text-red-500 hover:text-red-700 flex items-center">
-                        <i data-feather="log-out" class="w-5 h-5"></i>
-                    </button>
-                </form>
-            </div>
-        </div>
-    </nav>
+    
 
     <!-- Main Content -->
     <div class="container mx-auto p-6">

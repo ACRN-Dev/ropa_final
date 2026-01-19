@@ -10,6 +10,7 @@ use App\Http\Controllers\UserActivityController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\RopaIssueController;
+use App\Http\Controllers\RiskController;
 use App\Models\Comment;
 
 
@@ -245,5 +246,11 @@ Route::get('/admin/review-risk-dashboard', [App\Http\Controllers\Admin\ReviewCon
 
 
 
+// Inside your routes (likely within auth middleware)
+Route::middleware(['auth'])->group(function () {
+    // Your existing routes...
+    
+    Route::resource('risk-register', RiskController::class);
+});
 
 require __DIR__.'/auth.php';

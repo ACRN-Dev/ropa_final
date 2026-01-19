@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Review;
 use App\Models\User;
+use App\Models\EnterpriseRisk;
 
 class Ropa extends Model
 {
@@ -96,6 +97,31 @@ class Ropa extends Model
         return $this->hasMany(Review::class);
     }
 
+    /**
+     * Get all enterprise risks associated with this ROPA record
+     */
+    public function enterpriseRisks()
+    {
+        return $this->hasMany(EnterpriseRisk::class, 'source_id')
+                    ->where('source_type', 'ROPA');
+    }
+
+    /**
+     * Get only open risks
+     */
+    public function openRisks()
+    {
+        return $this->enterpriseRisks()->where('status', 'open');
+    }
+
+    /**
+     * Get high priority risks
+     */
+    public function highPriorityRisks()
+    {
+        return $this->enterpriseRisks()->whereIn('risk_level', ['high', 'critical']);
+    }
+
     // ---------------------------------------------------
     // Status helpers
     // ---------------------------------------------------
@@ -107,6 +133,30 @@ class Ropa extends Model
     public function isPending(): bool
     {
         return $this->status === self::STATUS_PENDING;
+    }
+
+    /**
+     * Check if ROPA has any associated risks
+     */
+    public function hasRisks(): bool
+    {
+        return $this->enterpriseRisks()->exists();
+    }
+
+    /**
+     * Count total risks
+     */
+    public function getRisksCountAttribute(): int
+    {
+        return $this->enterpriseRisks()->count();
+    }
+
+    /**
+     * Count open risks
+     */
+    public function getOpenRisksCountAttribute(): int
+    {
+        return $this->openRisks()->count();
     }
 
     // ---------------------------------------------------
