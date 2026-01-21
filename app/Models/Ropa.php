@@ -82,6 +82,7 @@ class Ropa extends Model
         'sharing_local' => 'boolean',
         'sharing_transborder' => 'boolean',
         'access_control' => 'boolean',
+        'archived' => 'boolean',
     ];
 
     // ---------------------------------------------------

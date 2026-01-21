@@ -11,6 +11,7 @@ use App\Models\Review;
 use Illuminate\Support\Facades\DB;
 use App\Mail\UserStatusChanged;
 use App\Mail\UserAccountCreated;
+use App\Models\EnterpriseRisk;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 
@@ -53,90 +54,178 @@ public function createUser()
 {
     return $this->dashboard();
 }
-
 public function dashboard()
-{
-    $user = auth()->user();
+    {
+        $user = auth()->user();
 
-    // Latest notifications
-    $notifications = UserStatusLog::with('user')
-        ->orderBy('created_at', 'desc')
-        ->take(5)
-        ->get();
+        /* ===============================
+         |  Notifications
+         =============================== */
+        $notifications = UserStatusLog::with('user')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
 
-    // Get reviews for all ROPAs that belong to this user
-    $reviews = Review::whereIn('ropa_id', function ($q) use ($user) {
-        $q->select('id')
-          ->from('ropas')
-          ->where('user_id', $user->id);
-    })->get();
+        /* ===============================
+         |  Recent & Archived ROPAs
+         =============================== */
+        $recentRopas = Ropa::with('user')
+            ->where('user_id', $user->id)
+            ->where('archived', false)
+            ->latest()
+            ->take(5)
+            ->get();
 
-    // Prevent divide-by-zero
-    $total = max($reviews->count(), 1);
+        $archivedRopas = Ropa::with('user')
+            ->where('user_id', $user->id)
+            ->where('archived', true)
+            ->latest()
+            ->get();
 
-    // Count by categories
-    $critical = $reviews->filter(fn($r) => $r->total_score <= 50)->count();
-    $high     = $reviews->filter(fn($r) => $r->total_score > 50 && $r->total_score <= 100)->count();
-    $medium   = $reviews->filter(fn($r) => $r->total_score > 100 && $r->total_score <= 160)->count();
-    $low      = $reviews->filter(fn($r) => $r->total_score > 160)->count();
+        /* ===============================
+         |  All ROPAs (Paginated)
+         =============================== */
+        $allRopas = Ropa::with(['enterpriseRisks', 'user'])
+            ->where('user_id', $user->id)
+            ->latest()
+            ->paginate(15, ['*'], 'ropa_page');
 
-    // Percentages
-    $criticalRisk = round(($critical / $total) * 100, 1);
-    $highRisk     = round(($high / $total) * 100, 1);
-    $mediumRisk   = round(($medium / $total) * 100, 1);
-    $lowRisk      = round(($low / $total) * 100, 1);
+        /* ===============================
+         |  All Enterprise Risks
+         =============================== */
+        $allRisks = EnterpriseRisk::with('owner')
+            ->where(function ($query) use ($user) {
+                $query->where('owner_id', $user->id)
+                    ->orWhere(function ($q) use ($user) {
+                        $q->where('source_type', 'ROPA')
+                          ->whereIn('source_id', function ($subq) use ($user) {
+                              $subq->select('id')
+                                   ->from('ropas')
+                                   ->where('user_id', $user->id);
+                          });
+                    });
+            })
+            ->latest()
+            ->paginate(15, ['*'], 'risks_page');
 
-    return view('dashboard', compact(
-        'user',
-        'notifications',
-        'criticalRisk',
-        'highRisk',
-        'mediumRisk',
-        'lowRisk',
-        'reviews'
-    ));
-}
+        /* ===============================
+         |  Risk Collections
+         =============================== */
+        $risks = EnterpriseRisk::where('owner_id', $user->id)->get();
 
+        $ropaRisks = EnterpriseRisk::where('source_type', 'ROPA')
+            ->whereIn('source_id', function ($q) use ($user) {
+                $q->select('id')
+                  ->from('ropas')
+                  ->where('user_id', $user->id);
+            })
+            ->get();
 
+        $allUserRisks = $risks->merge($ropaRisks)->unique('id');
 
+        /* ===============================
+         |  Risk Counts by Level
+         =============================== */
+        $critical = $allUserRisks->where('risk_level', 'critical')->count();
+        $high     = $allUserRisks->where('risk_level', 'high')->count();
+        $medium   = $allUserRisks->where('risk_level', 'medium')->count();
+        $low      = $allUserRisks->where('risk_level', 'low')->count();
 
+        $total = max($critical + $high + $medium + $low, 1);
 
+        $criticalRisk = round(($critical / $total) * 100, 1);
+        $highRisk     = round(($high / $total) * 100, 1);
+        $mediumRisk   = round(($medium / $total) * 100, 1);
+        $lowRisk      = round(($low / $total) * 100, 1);
 
-public function userRiskDashboard()
-{
-    $user = auth()->user();
+        /* ===============================
+         |  Risk Status Stats
+         =============================== */
+        $totalRisks       = $allUserRisks->count();
+        $openRisks        = $allUserRisks->where('status', 'open')->count();
+        $inProgressRisks  = $allUserRisks->where('status', 'in_progress')->count();
+        $mitigatedRisks   = $allUserRisks->where('status', 'mitigated')->count();
 
-    // Only fetch reviews belonging to the logged-in user
-    $reviews = Review::where('user_id', $user->id)->get();
+        /* ===============================
+         |  View
+         =============================== */
+        return view('dashboard', compact(
+            'user',
+            'notifications',
+            'recentRopas',
+            'archivedRopas',
+            'allRopas',
+            'allRisks',
+            'criticalRisk',
+            'highRisk',
+            'mediumRisk',
+            'lowRisk',
+            'ropaRisks',
+            'risks',
+            'totalRisks',
+            'openRisks',
+            'inProgressRisks',
+            'mitigatedRisks',
+            'critical',
+            'high',
+            'medium',
+            'low'
+        ));
+    }
 
-    // Prevent divide-by-zero
-    $total = max($reviews->count(), 1);
+    /* =========================================================
+     |  USER RISK DASHBOARD (UNCHANGED, SAFE)
+     ========================================================= */
+    public function userRiskDashboard()
+    {
+        $user = Auth::user();
 
-    // Risk level groupings
-    $critical = $reviews->filter(fn($r) => $r->total_score <= 50)->count();
-    $high     = $reviews->filter(fn($r) => $r->total_score > 50 && $r->total_score <= 100)->count();
-    $medium   = $reviews->filter(fn($r) => $r->total_score > 100 && $r->total_score <= 160)->count();
-    $low      = $reviews->filter(fn($r) => $r->total_score > 160)->count();
+        $ownedRisks = EnterpriseRisk::where('owner_id', $user->id)->get();
 
-    // Percentages
-    $criticalRisk = round(($critical / $total) * 100, 1);
-    $highRisk     = round(($high / $total) * 100, 1);
-    $mediumRisk   = round(($medium / $total) * 100, 1);
-    $lowRisk      = round(($low / $total) * 100, 1);
+        $ropaRisks = EnterpriseRisk::where('source_type', 'ROPA')
+            ->whereIn('source_id', function ($q) use ($user) {
+                $q->select('id')
+                  ->from('ropas')
+                  ->where('user_id', $user->id);
+            })
+            ->get();
 
-    // Return to user dashboard
-    return view('dashboard', compact(
-        'user',
-        'criticalRisk',
-        'highRisk',
-        'mediumRisk',
-        'lowRisk',
-        'reviews'
-    ));
-}
+        $risks = $ownedRisks->merge($ropaRisks)->unique('id');
 
+        $critical = $risks->where('risk_level', 'critical')->count();
+        $high     = $risks->where('risk_level', 'high')->count();
+        $medium   = $risks->where('risk_level', 'medium')->count();
+        $low      = $risks->where('risk_level', 'low')->count();
 
+        $total = max($critical + $high + $medium + $low, 1);
 
+        $criticalRisk = round(($critical / $total) * 100, 1);
+        $highRisk     = round(($high / $total) * 100, 1);
+        $mediumRisk   = round(($medium / $total) * 100, 1);
+        $lowRisk      = round(($low / $total) * 100, 1);
+
+        $totalRisks = $risks->count();
+        $openRisks  = $risks->where('status', 'open')->count();
+        $highPriorityRisks = $risks->whereIn('risk_level', ['high', 'critical'])->count();
+
+        return view('dashboard', compact(
+            'user',
+            'criticalRisk',
+            'highRisk',
+            'mediumRisk',
+            'lowRisk',
+            'risks',
+            'totalRisks',
+            'openRisks',
+            'highPriorityRisks',
+            'critical',
+            'high',
+            'medium',
+            'low'
+        ));
+    }
+
+    
     /**
      * Show profile edit form.
      */

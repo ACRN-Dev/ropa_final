@@ -39,6 +39,39 @@ class EnterpriseRisk extends Model
         'source_id',
     ];
 
+
+    protected static function booted()
+{
+    static::creating(function ($risk) {
+        if (empty($risk->risk_id)) {
+            $year = now()->year;
+
+            $lastRisk = self::whereYear('created_at', $year)
+                ->orderBy('id', 'desc')
+                ->first();
+
+            $nextNumber = $lastRisk
+                ? ((int) substr($lastRisk->risk_id, -4)) + 1
+                : 1;
+
+            $risk->risk_id = sprintf(
+                'Risk-%d-%04d',
+                $year,
+                $nextNumber
+            );
+        }
+
+        // Ensure inherent risk score is correct
+        if (empty($risk->inherent_risk_score)) {
+            $risk->inherent_risk_score = $risk->likelihood * $risk->impact;
+        }
+
+        // Ensure risk_level matches score
+        $risk->risk_level = $risk->determineRiskLevel();
+    });
+}
+
+
     /**
      * Casts
      */

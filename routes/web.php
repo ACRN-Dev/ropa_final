@@ -57,7 +57,14 @@ Route::patch('/account', [DashboardController::class, 'update'])->name('account.
 
 
 // ROPA resource routes
-Route::resource('ropa', RopaController::class);
+
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::delete('/ropa/bulk-delete', [RopaController::class, 'bulkDelete'])->name('ropa.bulk-delete');
+    Route::resource('ropa', RopaController::class);
+
+});
 
 
 
@@ -135,9 +142,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
   
 
-  // Risk Score 
-
- 
 
 
   // Activity Route
@@ -165,6 +169,13 @@ Route::get('/ropa/{id}/print', [RopaController::class, 'print'])->name('ropa.pri
 // Handle sending the email (POST)
 Route::post('ropa/{id}/send-email', [RopaController::class, 'sendEmail'])->name('ropa.sendEmail.post');
 Route::patch('/profile/2fa-toggle', [ProfileController::class, 'toggleTwoFactor'])->name('2fa.toggle');
+Route::middleware(['auth'])->group(function () {
+   
+    
+    // Your other ROPA routes...
+   
+    // etc...
+});
 
 
 
@@ -237,6 +248,9 @@ Route::prefix('admin/tickets')->name('admin.tickets.')->middleware(['auth', 'adm
     // Close ticket (store comment and mark as resolved)
     Route::post('/{id}/close', [RopaIssueController::class, 'close'])
          ->name('close');
+
+         // Bulk Delete Route
+    
 });
 
 
@@ -247,10 +261,29 @@ Route::get('/admin/review-risk-dashboard', [App\Http\Controllers\Admin\ReviewCon
 
 
 // Inside your routes (likely within auth middleware)
+
+
 Route::middleware(['auth'])->group(function () {
-    // Your existing routes...
+    // Template download (must come before resource)
+    Route::get('risk-register/template/download', [RiskController::class, 'downloadTemplate'])
+        ->name('risk-register.download-template');
     
+    // Bulk operations (must come before resource)
+    Route::post('risk-register/import', [RiskController::class, 'import'])
+        ->name('risk-register.import');
+    
+    Route::post('risk-register/export-csv', [RiskController::class, 'exportCsv'])
+        ->name('risk-register.export-csv');
+    
+    Route::post('risk-register/export-pdf', [RiskController::class, 'exportPdf'])
+        ->name('risk-register.export-pdf');
+    
+    Route::delete('risk-register/bulk-delete', [RiskController::class, 'bulkDelete'])
+        ->name('risk-register.bulk-delete');
+    
+    // Standard Resource Routes (must come last)
     Route::resource('risk-register', RiskController::class);
 });
+
 
 require __DIR__.'/auth.php';
