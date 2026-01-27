@@ -17,54 +17,64 @@ use Illuminate\Support\Facades\DB;
 class ReviewController extends Controller
 {
     /**
-     * ADMIN: List all reviews
-     */
-    public function index(Request $request)
-    {
-        $query = Review::with(['user', 'ropa']);
+ * ADMIN: List all submitted ROPAs
+ */
+public function index(Request $request)
+{
+    // Get all ROPAs (both Pending and Reviewed are "submitted" ROPAs)
+    $query = Ropa::with(['user', 'reviews', 'enterpriseRisks']);
 
-        // SEARCH
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function ($qr) use ($search) {
-                $qr->whereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"))
-                   ->orWhereHas('ropa', fn($r) => $r->where('id', $search));
-            });
-        }
-
-        // FILTERS
-        if ($request->filled('dpa')) {
-            $query->where('data_processing_agreement', $request->dpa);
-        }
-
-        if ($request->filled('dpia')) {
-            $query->where('data_protection_impact_assessment', $request->dpia);
-        }
-
-        // SORTING
-        if ($request->filled('sort')) {
-            switch ($request->sort) {
-                case 'score_high':
-                    $query->orderBy('average_score', 'desc');
-                    break;
-                case 'score_low':
-                    $query->orderBy('average_score', 'asc');
-                    break;
-                case 'oldest':
-                    $query->orderBy('created_at', 'asc');
-                    break;
-                default:
-                    $query->orderBy('created_at', 'desc');
-            }
-        } else {
-            $query->orderBy('created_at', 'desc');
-        }
-
-        // PAGINATION
-        $reviews = $query->paginate(10)->withQueryString();
-
-        return view('admindashboard.review.index', compact('reviews'));
+    // SEARCH
+    if ($request->filled('search')) {
+        $search = $request->input('search');
+        $query->where(function ($qr) use ($search) {
+            $qr->whereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"))
+               ->orWhere('id', $search)
+               ->orWhere('organisation_name', 'like', "%{$search}%")
+               ->orWhere('department', 'like', "%{$search}%");
+        });
     }
+
+    // STATUS FILTER
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    // RISK LEVEL FILTER
+    if ($request->filled('risk_level')) {
+        $riskLevel = $request->risk_level;
+        $query->whereHas('enterpriseRisks', function($q) use ($riskLevel) {
+            $q->where('risk_level', $riskLevel);
+        });
+    }
+
+    // SORTING
+    if ($request->filled('sort')) {
+        switch ($request->sort) {
+            case 'score_high':
+                $query->withAvg('reviews', 'average_score')
+                      ->orderBy('reviews_avg_average_score', 'desc');
+                break;
+            case 'score_low':
+                $query->withAvg('reviews', 'average_score')
+                      ->orderBy('reviews_avg_average_score', 'asc');
+                break;
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
+        }
+    } else {
+        $query->orderBy('created_at', 'desc');
+    }
+
+    // PAGINATION
+    $ropas = $query->paginate(10)->withQueryString();
+
+    return view('admindashboard.review.index', compact('ropas'));
+}
+
 
     /**
      * ADMIN: Show single review — mark as IN PROGRESS if opened by admin

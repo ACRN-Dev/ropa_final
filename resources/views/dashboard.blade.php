@@ -81,6 +81,8 @@
 <!-- Two Cards Section -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
+
+
 <!-- Risk Distribution Card -->
 <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
     <h2 class="text-xl font-bold mb-4 flex items-center text-orange-500">

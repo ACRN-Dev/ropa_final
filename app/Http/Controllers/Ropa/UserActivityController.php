@@ -5,89 +5,166 @@ namespace App\Http\Controllers\Ropa;
 use App\Http\Controllers\Controller;
 use App\Models\UserActivity;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 class UserActivityController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
+    /**
+     * Display activity logs (HTML view)
+     */
+   public function index(Request $request)
+{
+    $query = UserActivity::with('user')->latest();
+    $currentUser = auth()->user();
+
+    // Restrict non-admins to their own activities
+    if ($currentUser->isAdmin() === false) {
+        $query->where('user_id', $currentUser->id);
     }
 
-    // Display all activities
-    public function index(Request $request)
-    {
-        $query = UserActivity::with('user');
+    // Search filter
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('model_type', 'like', "%{$search}%")
+              ->orWhere('ip_address', 'like', "%{$search}%")
+              ->orWhereRaw("JSON_EXTRACT(meta, '$.description') LIKE ?", ["%{$search}%"]);
+        });
+    }
 
-        if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('action', 'like', "%{$request->search}%")
-                    ->orWhere('ip_address', 'like', "%{$request->search}%")
-                    ->orWhere('user_agent', 'like', "%{$request->search}%");
-            });
+    // Action filter
+    if ($request->filled('action')) {
+        $query->where('action', $request->action);
+    }
+
+    // Date range filter
+    if ($request->filled('date_range')) {
+        $range = $request->date_range;
+        switch ($range) {
+            case 'today':
+                $query->whereDate('created_at', today());
+                break;
+            case 'yesterday':
+                $query->whereDate('created_at', today()->subDay());
+                break;
+            case '7days':
+                $query->where('created_at', '>=', now()->subDays(7));
+                break;
+            case '30days':
+                $query->where('created_at', '>=', now()->subDays(30));
+                break;
+            case '90days':
+                $query->where('created_at', '>=', now()->subDays(90));
+                break;
+        }
+    }
+
+    $activities = $query->paginate(15);
+
+    return view('logs.index', compact('activities'));
+}
+
+    /**
+     * JSON endpoint for AJAX requests
+     */
+    public function jsonIndex(Request $request)
+    {
+        $user = auth()->user();
+        $query = UserActivity::with('user')->latest();
+
+        if (!$user->isAdmin()) {
+            $query->where('user_id', $user->id);
+        } elseif ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
         }
 
-        $activities = $query->orderBy('created_at', 'desc')->paginate(10);
+        if ($request->filled('action')) {
+            $query->where('action', $request->action);
+        }
 
-        return view('admindashboard.logs.index', compact('activities'));
+        if ($request->filled('model')) {
+            $query->where('model', $request->model);
+        }
+
+        if ($request->filled('days')) {
+            $query->where('created_at', '>=', now()->subDays((int)$request->days));
+        }
+
+        $activities = $query->paginate(50)->withQueryString();
+
+        // Return JSON in a standard structure
+        return response()->json([
+            'data' => $activities->items(),
+            'current_page' => $activities->currentPage(),
+            'last_page' => $activities->lastPage(),
+            'per_page' => $activities->perPage(),
+            'total' => $activities->total(),
+            'from' => $activities->firstItem(),
+            'to' => $activities->lastItem(),
+        ]);
     }
 
-    // Show a single activity
+    /**
+     * Show a single activity
+     */
     public function show(UserActivity $activity)
     {
-        return view('admindashboard.logs.show', compact('activity'));
+        $this->authorizeActivity($activity);
+
+        $activity->load('user');
+
+        return response()->json($activity);
     }
 
-    // Delete an activity
-    public function destroy(UserActivity $activity)
+    /**
+     * Get activities for a specific user (API)
+     */
+    public function userActivities(int $userId)
     {
-        $activity->delete();
-        return redirect()
-            ->route('admindashboard.logs.index')
-            ->with('success', 'Activity deleted successfully.');
-    }
+        $user = auth()->user();
 
-    // Export activities to CSV
-    public function export()
-    {
-        $filename = 'user_activities_' . now()->format('Ymd_His') . '.csv';
+        if (!$user->isAdmin() && $user->id !== $userId) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $activities = UserActivity::with('user')
-            ->orderBy('created_at', 'desc')
+            ->where('user_id', $userId)
+            ->latest()
+            ->paginate(50);
+
+        return response()->json([
+            'data' => $activities->items(),
+            'current_page' => $activities->currentPage(),
+            'last_page' => $activities->lastPage(),
+            'per_page' => $activities->perPage(),
+            'total' => $activities->total(),
+            'from' => $activities->firstItem(),
+            'to' => $activities->lastItem(),
+        ]);
+    }
+
+    /**
+     * Get activities for a specific model instance
+     */
+    public function modelActivities(string $model, int $modelId)
+    {
+        $activities = UserActivity::with('user')
+            ->where('model', $model)
+            ->where('model_id', $modelId)
+            ->latest()
             ->get();
 
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
-        ];
+        return response()->json($activities);
+    }
 
-        $callback = function () use ($activities) {
-            $handle = fopen('php://output', 'w');
+    /**
+     * Simple authorization helper
+     */
+    protected function authorizeActivity(UserActivity $activity): void
+    {
+        $user = auth()->user();
 
-            fputcsv($handle, [
-                'ID',
-                'User',
-                'Action',
-                'Model',
-                'Model ID',
-                'IP Address',
-                'Created At'
-            ]);
-
-            foreach ($activities as $activity) {
-                fputcsv($handle, [
-                    $activity->id,
-                    optional($activity->user)->name,
-                    $activity->action,
-                    $activity->model_type,
-                    $activity->model_id,
-                    $activity->ip_address,
-                    $activity->created_at,
-                ]);
-            }
-
-            fclose($handle);
-        };
-
-        return response()->stream($callback, Response::HTTP_OK, $headers);
+        if (!$user->isAdmin() && $activity->user_id !== $user->id) {
+            abort(403, 'Unauthorized');
+        }
     }
 }

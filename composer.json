@@ -13,11 +13,9 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "league/oauth2-client": "^2.8",
-        "maatwebsite/excel": "^1.1",
         "mailjet/laravel-mailjet": "^3.1",
         "phpoffice/phpspreadsheet": "^5.4",
-        "s-ichikawa/laravel-sendgrid-driver": "^4.0",
-        "spatie/simple-excel": "^3.7"
+        "s-ichikawa/laravel-sendgrid-driver": "^4.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

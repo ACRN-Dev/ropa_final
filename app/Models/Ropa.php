@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models;
-
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Review;
@@ -151,6 +151,35 @@ class Ropa extends Model
     {
         return $this->enterpriseRisks()->count();
     }
+
+    // App\Models\Ropa.php
+
+public function getRiskLevelAttribute(): string
+{
+    if (!$this->relationLoaded('enterpriseRisks')) {
+        $this->load('enterpriseRisks');
+    }
+
+    if ($this->enterpriseRisks->isEmpty()) {
+        return 'N/A';
+    }
+
+    // Priority order
+    if ($this->enterpriseRisks->contains('risk_level', 'critical')) {
+        return 'critical';
+    }
+
+    if ($this->enterpriseRisks->contains('risk_level', 'high')) {
+        return 'high';
+    }
+
+    if ($this->enterpriseRisks->contains('risk_level', 'medium')) {
+        return 'medium';
+    }
+
+    return 'low';
+}
+
 
     /**
      * Count open risks

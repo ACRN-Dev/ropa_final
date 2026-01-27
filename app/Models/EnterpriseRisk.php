@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models;
-
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -99,22 +99,16 @@ class EnterpriseRisk extends Model
     /**
      * Get the associated ROPA record if source_type is 'ROPA'
      */
-    public function ropa()
-    {
-        return $this->belongsTo(Ropa::class, 'source_id')->where('source_type', 'ROPA');
-    }
+   public function ropa()
+{
+    return $this->belongsTo(Ropa::class, 'source_id');
+}
 
-    /**
-     * Polymorphic relationship to handle multiple source types
-     */
-    public function source()
-    {
-        if ($this->source_type === 'ROPA') {
-            return $this->ropa();
-        }
-        // Add other source types as needed
-        return null;
-    }
+public function source()
+{
+    return $this->source_type === 'ROPA' ? $this->ropa() : null;
+}
+
 
     // ---------------------------------------------------
     // Query Scopes

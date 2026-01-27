@@ -6,7 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RopaController;
 use App\Http\Controllers\RiskScoreController;
 use App\Http\Controllers\RiskWeightSettingController;
-use App\Http\Controllers\UserActivityController;
+use App\Http\Controllers\Ropa\UserActivityController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\RopaIssueController;
@@ -283,6 +283,32 @@ Route::middleware(['auth'])->group(function () {
     
     // Standard Resource Routes (must come last)
     Route::resource('risk-register', RiskController::class);
+});
+
+
+
+Route::middleware('auth')->group(function () {
+
+    // Logs index (Blade)
+    Route::get('/activities', [UserActivityController::class, 'index'])
+        ->name('activities.index');
+
+    // Single activity (JSON)
+    Route::get('/activities/show/{activity}', [UserActivityController::class, 'show'])
+        ->name('activities.view'); // 👈 CHANGED NAME
+
+    // User activities (JSON)
+    Route::get('/users/{userId}/activities', [UserActivityController::class, 'userActivities'])
+        ->name('users.activities');
+
+    // Model activities (JSON)
+    Route::get('/activities/model/{model}/{modelId}', [UserActivityController::class, 'modelActivities'])
+        ->name('activities.model');
+
+        // JSON endpoint for JS (used by your Blade page)
+Route::get('/activities/json', [UserActivityController::class, 'jsonIndex'])
+    ->name('activities.json');
+
 });
 
 

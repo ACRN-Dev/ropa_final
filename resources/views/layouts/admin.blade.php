@@ -70,13 +70,13 @@
             </li>
 
             <!-- Manage Tickets -->
-            <li class="mb-2">
+            <!-- <li class="mb-2">
                 <a href="{{ route('admin.tickets.index') }}"
                    class="flex items-center py-2 px-3 rounded hover:bg-sidebar/80
                    {{ request()->routeIs('admin.tickets.index') ? 'bg-sidebar/90' : '' }}">
                     <i data-feather="tag" class="w-4 h-4 mr-2"></i> Manage Tickets
                 </a>
-            </li>
+            </li> -->
 
             <!-- Manage Users -->
             <li class="mb-2">

@@ -69,6 +69,17 @@
                 </a>
             </li>
 
+            
+<li class="mb-2">
+    <a href="{{ route('activities.index') }}"
+       class="flex items-center py-2 px-3 rounded hover:bg-sidebar/80 transition-colors duration-200 w-full text-left">
+        <i data-feather="activity" class="w-5 h-5 mr-2"></i>
+        My Logs
+    </a>
+</li>
+
+
+
             <!-- Settings -->
             <li class="mb-2 w-full">
                 <a href="{{ route('profile.edit') }}"

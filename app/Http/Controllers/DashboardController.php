@@ -21,19 +21,62 @@ class DashboardController extends Controller
     /**
      * Show admin dashboard.
      */
-
-
-    // public function admin()
-    // {
-    //     $user = auth()->user();
-    //     return view('admindashboard.dashboard', compact('user'));
-    // }
-
-
 public function admin()
-{
-    return $this->reviewRiskDashboard();
-}
+    {
+        $user = auth()->user();
+
+        $allRopas = Ropa::with(['enterpriseRisks', 'user'])
+    ->where('user_id', $user->id)
+    ->latest()
+    ->paginate(15);
+
+
+        /* -------------------------------
+         | Risk distribution (ADMIN)
+         ------------------------------- */
+        $risks = EnterpriseRisk::all();
+
+        $critical = $risks->where('risk_level', 'critical')->count();
+        $high     = $risks->where('risk_level', 'high')->count();
+        $medium   = $risks->where('risk_level', 'medium')->count();
+        $low      = $risks->where('risk_level', 'low')->count();
+
+        $total = max($critical + $high + $medium + $low, 1);
+
+        $criticalRisk = round(($critical / $total) * 100, 1);
+        $highRisk     = round(($high / $total) * 100, 1);
+        $mediumRisk   = round(($medium / $total) * 100, 1);
+        $lowRisk      = round(($low / $total) * 100, 1);
+
+        /* -------------------------------
+         | Admin ROPA stats
+         ------------------------------- */
+        $overdueReviews = Ropa::where('status', 'Pending')
+            ->whereDate('created_at', '<', now()->subDays(30))
+            ->count();
+
+        $tasksCompleted = Ropa::whereIn('status', ['Reviewed', 'Approved'])->count();
+
+        return view('admindashboard.dashboard', compact(
+            'user',
+            'critical',
+            'high',
+            'medium',
+            'low',
+            'criticalRisk',
+            'highRisk',
+            'mediumRisk',
+            'lowRisk',
+            'overdueReviews',
+            'tasksCompleted'
+        ));
+    }
+
+
+// public function admin()
+// {
+//     return $this->reviewRiskDashboard();
+// }
 
 
     /**
@@ -54,6 +97,7 @@ public function createUser()
 {
     return $this->dashboard();
 }
+
 public function dashboard()
     {
         $user = auth()->user();
