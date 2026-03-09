@@ -47,7 +47,7 @@
                 <a href="{{ route('admin.dashboard') }}"
                    class="flex items-center py-2 px-3 rounded hover:bg-sidebar/80 
                    {{ request()->routeIs('admin.dashboard') ? 'bg-sidebar/90' : '' }}">
-                    <i data-feather="home" class="w-5 h-5 mr-2"></i> Dashboard
+                    <i data-feather="home" class="w-5 h-5 mr-2"></i> Home
                 </a>
             </li>
 
