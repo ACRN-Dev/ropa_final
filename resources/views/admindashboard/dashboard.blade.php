@@ -290,7 +290,7 @@
                         <tr class="hover:bg-orange-50 dark:hover:bg-gray-700 transition-colors duration-150" data-status="{{ $ropa->status ?? 'Pending' }}">
                             <!-- ID -->
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <span class="font-bold text-gray-900 dark:text-gray-100">#{{ $ropa->id }}</span>
+                                <span class="font-bold text-gray-900 dark:text-gray-100">{{ $ropa->id }}</span>
                             </td>
 
                             <!-- Organisation -->

@@ -90,78 +90,9 @@
         <form action="{{ route('ropa.store') }}" method="POST" enctype="multipart/form-data" class="bg-white rounded-xl shadow-md p-8 space-y-8" novalidate>
             @csrf
 
-            <!-- UPLOAD ROPA DOCUMENT -->
+            <!-- ORGANISATION & DEPARTMENT -->
             <div class="space-y-6">
                 <div class="flex items-center gap-2 pb-2 border-b border-gray-200">
-                    <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                    </svg>
-                    <h2 class="text-xl font-bold text-gray-800">Upload Processing Activity</h2>
-                </div>
-
-                <div class="space-y-6">
-                    <!-- Download Sample Excel -->
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-dashed border-blue-200 rounded-lg p-5">
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold text-gray-800 mb-1">
-                                Download Sample Excel Template
-                            </p>
-                            <p class="text-xs text-gray-600">
-                                Use this template to upload ROPA data correctly
-                            </p>
-                        </div>
-
-                        <a href="{{ asset('samples/ropa_sample.xlsx') }}"
-                           class="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium"
-                           download
-                           aria-label="Download sample Excel template">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                            </svg>
-                            Download Template
-                        </a>
-                    </div>
-
-                    <!-- Upload File -->
-                    <div>
-                        <label for="ropa_file" class="block text-sm font-semibold text-gray-700 mb-2">
-                            ROPA Document <span class="text-red-500">*</span>
-                        </label>
-
-                        <div class="relative">
-                            <input
-                                type="file"
-                                id="ropa_file"
-                                name="ropa_file"
-                                required
-                                accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                class="block w-full text-sm text-gray-600
-                                       file:mr-4 file:py-2.5 file:px-4
-                                       file:rounded-lg file:border-0
-                                       file:text-sm file:font-semibold
-                                       file:bg-green-600 file:text-white
-                                       file:cursor-pointer
-                                       hover:file:bg-green-700
-                                       file:transition-colors
-                                       cursor-pointer
-                                       border border-gray-300 rounded-lg
-                                       focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                aria-describedby="file-help"
-                            />
-                        </div>
-                        <p id="file-help" class="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            Accepted format: Excel (.xlsx only, Max 2MB)
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ORGANISATION & DEPARTMENT -->
-            <div class="space-y-6 pt-4 border-t border-gray-200">
-                <div class="flex items-center gap-2 pb-2">
                     <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                     </svg>
@@ -177,13 +108,28 @@
                                 id="organisation_name" 
                                 class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors">
                             <option value="">-- Select Organisation --</option>
-                            @foreach(['Mutala Trust','Infectious Diseases Research Lab','Clinresco', 'Charles River Medical Group'] as $org)
+                            @foreach(['Africa Clinical Research','Mutala Trust','Infectious Diseases Research Lab','Clinresco', 'Charles River Medical Group'] as $org)
                                 <option value="{{ $org }}" {{ old('organisation_name') == $org ? 'selected' : '' }}>
                                     {{ $org }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
+
+                    <!-- Organisation Status -->
+<div>
+    <label for="organisation_status" class="block font-semibold mb-2 text-gray-700">
+        Organisation Status
+    </label>
+    <input type="text"
+           id="organisation_status"
+           name="organisation_status"
+           value="{{ old('organisation_status', 'Controller') }}"
+           class="w-full border border-gray-300 rounded-lg p-2.5 bg-gray-50 text-gray-700"
+           readonly
+           aria-readonly="true">
+</div>
+
 
                     <!-- Other Organisation Input -->
                     <div id="other_organisation_wrapper" class="{{ old('organisation_name') == 'Other' ? '' : 'hidden' }}">
@@ -237,6 +183,21 @@
                 </div>
             </div>
 
+
+<!-- Data Protection Officer -->
+<div>
+    <label for="data_protection_officer" class="block font-semibold mb-2 text-gray-700">
+        Data Protection Officer
+    </label>
+    <input type="text"
+           id="data_protection_officer"
+           name="data_protection_officer"
+           value="{{ old('data_protection_officer', 'Tatenda Magetsi') }}"
+           class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+           placeholder="Enter Data Protection Officer name">
+</div>
+
+
             <!-- PROCESSING INFORMATION -->
             <div class="space-y-6 pt-4 border-t border-gray-200">
                 <div class="flex items-center gap-2 pb-2">
@@ -250,7 +211,7 @@
                 <!-- Processes -->
                 <div>
                     <label for="processes" class="block font-semibold mb-2 text-gray-700">
-                        Processes
+                        Process Name
                     </label>
                     <input type="text" 
                            id="processes"
@@ -259,6 +220,58 @@
                            placeholder="e.g. Data collection, analysis"
                            value="{{ old('processes.0') }}">
                 </div>
+
+
+
+<!-- Outsourced Processing -->
+<div class="grid md:grid-cols-2 gap-6">
+    <div>
+        <label for="outsourced_processing" class="block font-semibold mb-2 text-gray-700">
+            Outsourced Processing?
+        </label>
+        <select
+            id="outsourced_processing"
+            name="outsourced_processing"
+            class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+        >
+            <option value="">-- Select --</option>
+            <option value="1" {{ old('outsourced_processing') === '1' ? 'selected' : '' }}>Yes</option>
+            <option value="0" {{ old('outsourced_processing') === '0' ? 'selected' : '' }}>No</option>
+        </select>
+    </div>
+
+    <div id="outsourced_processing_description_wrapper" class="hidden">
+        <label for="outsourced_processing_description" class="block font-semibold mb-2 text-gray-700">
+            Brief Description (if Yes)
+        </label>
+        <input
+            type="text"
+            id="outsourced_processing_description"
+            name="outsourced_processing_description"
+            value="{{ old('outsourced_processing_description') }}"
+            class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+            placeholder="e.g. Data entry outsourced to vendor X for digitization"
+        />
+    </div>
+</div>
+
+
+
+
+<!-- Description of Processing Activity -->
+<div>
+    <label for="processing_activity_description" class="block font-semibold mb-2 text-gray-700">
+        Description of Processing Activity
+    </label>
+    <textarea
+        id="processing_activity_description"
+        name="processing_activity_description"
+        rows="4"
+        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+        placeholder="Briefly describe what this processing activity does, why it exists, and how data is handled."
+    >{{ old('processing_activity_description') }}</textarea>
+</div>
+
 
                 <!-- Data Sources -->
                 <div>
@@ -649,8 +662,91 @@
         </form>
     </div>
 
-    {{-- ALL ROPAS TAB - RESPONSIVE TABLE --}}
+    {{-- ALL ROPAS TAB --}}
     <div id="all-content" class="tab-content hidden">
+        {{-- UPLOAD ROPA DOCUMENT SECTION --}}
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6 space-y-6">
+            <div class="flex items-center gap-2 pb-2 border-b border-gray-200">
+                <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                <h2 class="text-xl font-bold text-gray-800">Upload Processing Activity</h2>
+            </div>
+
+            <form action="{{ route('ropa.store') }}" method="POST" enctype="multipart/form-data" novalidate>
+                @csrf
+                <div class="space-y-6">
+                    <!-- Download Sample Excel -->
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-dashed border-blue-200 rounded-lg p-5">
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-gray-800 mb-1">
+                                Download Sample Excel Template
+                            </p>
+                            <p class="text-xs text-gray-600">
+                                Use this template to upload ROPA data correctly
+                            </p>
+                        </div>
+
+                        <a href="{{ asset('samples/ropa_sample.xlsx') }}"
+                           class="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium"
+                           download
+                           aria-label="Download sample Excel template">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            Download Template
+                        </a>
+                    </div>
+
+                    <!-- Upload File -->
+                    <div>
+                        <label for="ropa_file" class="block text-sm font-semibold text-gray-700 mb-2">
+                            ROPA Document <span class="text-red-500">*</span>
+                        </label>
+
+                        <div class="relative">
+                            <input
+                                type="file"
+                                id="ropa_file"
+                                name="ropa_file"
+                                required
+                                accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                class="block w-full text-sm text-gray-600
+                                       file:mr-4 file:py-2.5 file:px-4
+                                       file:rounded-lg file:border-0
+                                       file:text-sm file:font-semibold
+                                       file:bg-green-600 file:text-white
+                                       file:cursor-pointer
+                                       hover:file:bg-green-700
+                                       file:transition-colors
+                                       cursor-pointer
+                                       border border-gray-300 rounded-lg
+                                       focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                aria-describedby="file-help"
+                            />
+                        </div>
+                        <p id="file-help" class="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Accepted format: Excel (.xlsx only, Max 2MB)
+                        </p>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex justify-end">
+                        <button type="submit" 
+                                class="bg-green-600 text-white px-6 py-2.5 rounded-lg hover:bg-green-700 transition-colors font-semibold shadow-md hover:shadow-lg flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                            Upload ROPA
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
         @if(isset($ropas) && $ropas->count() > 0)
             <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
                 {{-- Enhanced Action Bar --}}
@@ -1070,6 +1166,30 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+
+    // Outsourced processing toggle
+const outsourcedSelect = document.getElementById('outsourced_processing');
+const outsourcedWrapper = document.getElementById('outsourced_processing_description_wrapper');
+
+function toggleOutsourced() {
+    if (!outsourcedSelect || !outsourcedWrapper) return;
+
+    if (outsourcedSelect.value === '1') {
+        outsourcedWrapper.classList.remove('hidden');
+    } else {
+        outsourcedWrapper.classList.add('hidden');
+        // optional: clear value when "No"
+        const desc = document.getElementById('outsourced_processing_description');
+        if (desc) desc.value = '';
+    }
+}
+
+if (outsourcedSelect) {
+    toggleOutsourced(); // run on load (handles old() too)
+    outsourcedSelect.addEventListener('change', toggleOutsourced);
+}
+
 
     // Auto-dismiss alerts
     const alerts = document.querySelectorAll('.alert');
