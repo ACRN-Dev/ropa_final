@@ -52,13 +52,14 @@
             </li>
 
             <!-- Assessments -->
-            <li class="mb-2">
+             
+            <!-- <li class="mb-2">
                 <a href="{{ route('admin.reviews.index') }}"
                    class="flex items-center py-2 px-3 rounded hover:bg-sidebar/80
                    {{ request()->routeIs('admin.reviews.index') ? 'bg-sidebar/90' : '' }}">
                     <i data-feather="file-text" class="w-5 h-5 mr-2"></i> Assessments
                 </a>
-            </li>
+            </li> -->
 
             <!-- Analytics -->
             <li class="mb-2">
