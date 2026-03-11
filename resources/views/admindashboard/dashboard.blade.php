@@ -162,9 +162,7 @@
                         <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                             Status
                         </th>
-                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                            Risk Level
-                        </th>
+                        
                         <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                             Actions
                         </th>
@@ -259,25 +257,6 @@
                             </td>
 
                             <!-- Risk Level -->
-                            <!-- Risk Level -->
-<td class="px-4 py-3">
-    @php
-        $risk = strtolower($ropa->risk_level ?? 'n/a');
-
-        $riskColor = match ($risk) {
-            'critical' => 'bg-purple-100 text-purple-800 border-purple-300',
-            'high'     => 'bg-red-100 text-red-800 border-red-300',
-            'medium'   => 'bg-yellow-100 text-yellow-800 border-yellow-300',
-            'low'      => 'bg-green-100 text-green-800 border-green-300',
-            default    => 'bg-gray-100 text-gray-800 border-gray-300',
-        };
-    @endphp
-
-    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border {{ $riskColor }}">
-        {{ ucfirst($risk) }}
-    </span>
-</td>
-
 
                             <!-- Actions -->
                             <td class="px-4 py-3 whitespace-nowrap">
