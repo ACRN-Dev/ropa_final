@@ -44,7 +44,7 @@
             <li class="mb-2">
                 <a href="{{ route('dashboard') }}"
                    class="flex items-center py-2 px-3 rounded hover:bg-sidebar/80 transition-colors duration-200">
-                    <i data-feather="home" class="w-5 h-5 mr-2"></i> Dashboard
+                    <i data-feather="home" class="w-5 h-5 mr-2"></i> Home
                 </a>
             </li>
 
@@ -129,14 +129,14 @@
                     <div class="flex items-center gap-4">
                         
                         <!-- Search Bar (Optional) -->
-                        <div class="hidden md:block">
+                        <!-- <div class="hidden md:block">
                             <div class="relative">
                                 <input type="text" 
                                        placeholder="Search..." 
                                        class="w-64 pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm">
                                 <i data-feather="search" class="w-4 h-4 absolute left-3 top-3 text-gray-400"></i>
                             </div>
-                        </div>
+                        </div> -->
 
                         <!-- Notifications -->
                         <div class="relative">
