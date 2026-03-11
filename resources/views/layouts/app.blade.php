@@ -139,13 +139,7 @@
                         </div> -->
 
                         <!-- Notifications -->
-                        <div class="relative">
-                            <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative">
-                                <i data-feather="bell" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
-                                <!-- Notification badge -->
-                                <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                            </button>
-                        </div>
+                        
 
                         <!-- User Profile Dropdown -->
                         <div class="relative" x-data="{ open: false }">
