@@ -1,104 +1,186 @@
 <x-guest-layout>
-    <!-- Login Card -->
-    <div class="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-200 dark:border-gray-700">
-        <!-- Header -->
-        <div class="flex flex-col items-center mb-6">
-            <div class="mb-4">
-                <img src="{{ asset('logo.jpg') }}" alt="ACRN Logo" class="h-20 w-20 rounded-full shadow-lg ring-2 ring-orange-600/20 object-cover">
-            </div>
-            <div class="text-center">
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">Login to Your Account</h1>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Enter your credentials to access the ROPA dashboard</p>
-                <div class="flex items-center justify-center gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                    <span class="text-xs font-semibold text-orange-600 dark:text-orange-500">ACRN Data Protection 2026</span>
-                </div>
-            </div>
-        </div>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Overpass:wght@300;400;600;700&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        <!-- Session Status -->
-        <x-auth-session-status class="mb-4" :status="session('status')" />
+    body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f5f6fa;
+        font-family: 'Overpass', sans-serif;
+        color: #3d3d3d;
+    }
 
-        <!-- Login Form -->
-        <form method="POST" action="{{ route('login') }}" class="space-y-5">
+    .outer {
+        width: 100%;
+        max-width: 500px;
+        padding: 20px;
+    }
+
+    /* Logo + headings */
+    .top {
+        text-align: center;
+        margin-bottom: 28px;
+    }
+    .top img {
+        max-width: 210px;
+        height: auto;
+        margin-bottom: 22px;
+    }
+    .top h2 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin-bottom: 5px;
+    }
+    .top p {
+        font-size: 0.88rem;
+        color: #9a9a9a;
+    }
+
+    /* Card */
+    .card {
+        background: #fff;
+        border: 1px solid #e2e5ee;
+        border-radius: 8px;
+        padding: 34px 32px 28px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    /* Alert */
+    .alert {
+        padding: 9px 13px;
+        border-radius: 5px;
+        font-size: 0.78rem;
+        margin-bottom: 16px;
+    }
+    .alert-success { background: #eaf7ee; border: 1px solid #b6e8c4; color: #276749; }
+    .alert-danger  { background: #fdf2f2; border: 1px solid #f5c6cb; color: #9b1c1c; }
+    .alert-info    { background: #e8f4fb; border: 1px solid #bee3f8; color: #1a5276; }
+
+    /* Form */
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+        display: block;
+        font-size: 0.83rem;
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 6px;
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px 13px;
+        border: 1px solid #d5d8e0;
+        border-radius: 5px;
+        font-family: 'Overpass', sans-serif;
+        font-size: 0.9rem;
+        color: #1a1a2e;
+        background: #f8f9fc;
+        outline: none;
+        transition: border-color 0.15s;
+    }
+    .form-control:focus {
+        border-color: #5a5fcf;
+        background: #fff;
+        box-shadow: none;
+    }
+    .form-control::placeholder { color: #c0c3ce; }
+
+    .field-error { font-size: 0.7rem; color: #dc2626; margin-top: 4px; }
+
+    /* Options */
+    .options {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        font-size: 0.78rem;
+    }
+    .remember { display: flex; align-items: center; gap: 6px; color: #666; cursor: pointer; }
+    .remember input { width: 13px; height: 13px; accent-color: #5a5fcf; }
+    .forgot { color: #5a5fcf; text-decoration: none; font-size: 0.78rem; }
+    .forgot:hover { text-decoration: underline; }
+
+    /* Button */
+    .btn-primary {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        background: #5a5fcf;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-family: 'Overpass', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .btn-primary:hover { background: #4a4fbf; }
+
+    /* Footer */
+    .card-footer {
+        text-align: center;
+        font-size: 0.75rem;
+        color: #aaa;
+        margin-top: 18px;
+        padding-top: 14px;
+        border-top: 1px solid #f0f0f5;
+    }
+    .card-footer a { color: #5a5fcf; text-decoration: none; }
+    .card-footer a:hover { text-decoration: underline; }
+</style>
+
+<div class="outer">
+    <div class="top">
+        <img src="{{ asset('logo.jpg') }}" alt="ACRN Logo">
+        <h2>Sign In</h2>
+        <p>Sign in to your ACRN ROPA account</p>
+    </div>
+
+    <div class="card">
+        @if (session('status'))
+            <div class="alert alert-success">{{ session('status') }}</div>
+        @endif
+
+        <form method="POST" action="{{ route('login') }}" novalidate>
             @csrf
 
-            <!-- Email Address -->
-            <div>
-                <x-input-label for="email" :value="__('Email Address')" class="text-gray-700 dark:text-gray-300 font-medium mb-1.5"/>
-                <x-text-input id="email"
-                    class="block mt-1 w-full border-gray-300 dark:border-gray-600 
-                           focus:border-orange-500 focus:ring-orange-500 
-                           rounded-lg shadow-sm transition-colors"
-                    type="email"
-                    name="email"
-                    :value="old('email')"
-                    placeholder="Enter your email address"
-                    required autofocus autocomplete="username" />
-                <x-input-error :messages="$errors->get('email')" class="mt-1.5 text-red-600 text-sm" />
+            <div class="form-group">
+                <label for="email">Email address</label>
+                <input type="email" name="email" id="email" class="form-control"
+                    value="{{ old('email') }}" placeholder="you@example.com"
+                    required autofocus autocomplete="username">
+                @error('email')<p class="field-error">{{ $message }}</p>@enderror
             </div>
 
-            <!-- Password -->
-            <div>
-                <x-input-label for="password" :value="__('Password')" class="text-gray-700 dark:text-gray-300 font-medium mb-1.5"/>
-                <x-text-input id="password"
-                    class="block mt-1 w-full border-gray-300 dark:border-gray-600 
-                           focus:border-orange-500 focus:ring-orange-500 
-                           rounded-lg shadow-sm transition-colors"
-                    type="password"
-                    name="password"
-                    placeholder="Enter your password"
-                    required autocomplete="current-password" />
-                <x-input-error :messages="$errors->get('password')" class="mt-1.5 text-red-600 text-sm" />
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" class="form-control"
+                    placeholder="••••••••"
+                    required autocomplete="current-password">
+                @error('password')<p class="field-error">{{ $message }}</p>@enderror
             </div>
 
-            <!-- Remember Me & Forgot Password -->
-            <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                    <input id="remember_me" 
-                        type="checkbox"
-                        class="rounded border-gray-300 text-orange-600 shadow-sm 
-                               focus:ring-orange-500 focus:ring-offset-0"
-                        name="remember">
-                    <label for="remember_me" class="ml-2 text-sm text-gray-600 dark:text-gray-300 cursor-pointer">
-                        {{ __('Remember me') }}
-                    </label>
-                </div>
-
+            <div class="options">
+                <label class="remember">
+                    <input type="checkbox" name="remember"> Remember me
+                </label>
                 @if (Route::has('password.request'))
-                    <a class="text-sm text-orange-600 hover:text-orange-700 dark:text-orange-500 dark:hover:text-orange-400 
-                              font-medium transition-colors"
-                        href="{{ route('password.request') }}">
-                        {{ __('Forgot password?') }}
-                    </a>
+                    <a class="forgot" href="{{ route('password.request') }}">Forgot password?</a>
                 @endif
             </div>
 
-            <!-- Login Button -->
-            <div class="pt-2">
-                <x-primary-button class="w-full bg-orange-600 hover:bg-orange-700 
-                                         text-white font-semibold py-2.5 
-                                         focus:ring-orange-500 focus:ring-offset-2
-                                         transition-all duration-200 shadow-md hover:shadow-lg">
-                    <span class="flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-                        </svg>
-                        {{ __('Log in') }}
-                    </span>
-                </x-primary-button>
-            </div>
-
-            <!-- Register Link -->
-            <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                <p class="text-center text-sm text-gray-600 dark:text-gray-400">
-                    {{ __("Don't have an account?") }}
-                    <a href="{{ route('register') }}"
-                        class="font-semibold text-orange-600 hover:text-orange-700 dark:text-orange-500 dark:hover:text-orange-400 
-                               transition-colors underline underline-offset-2">
-                        {{ __('Register here') }}
-                    </a>
-                </p>
-            </div>
+            <button type="submit" class="btn-primary">Sign in</button>
         </form>
+
+        @if (Route::has('register'))
+            <div class="card-footer">
+                No account? <a href="{{ route('register') }}">Register here</a>
+            </div>
+        @endif
     </div>
+</div>
 </x-guest-layout>
