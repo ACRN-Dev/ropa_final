@@ -4,13 +4,12 @@
 
 @section('content')
 
-<!-- ── PAGE HEADER (desktop only — mobile header is in the layout) ── -->
+<!-- ── PAGE HEADER (desktop only) ── -->
 <div class="hidden md:flex items-center justify-between mb-5 lg:mb-6">
     <div>
         <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 leading-tight">ROPA Admin Overview</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Monitor compliance, risk levels, and recent activity.</p>
     </div>
-    <!-- User menu (desktop) -->
     <div class="relative">
         <button id="userMenuButton"
                 class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition focus:outline-none">
@@ -43,7 +42,6 @@
 
 <!-- ── STAT CARDS ── -->
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 mb-6 lg:mb-8">
-
     <div class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-xl border-l-4 border-orange-500 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between gap-2">
         <div class="min-w-0">
             <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide leading-tight">Total Records</p>
@@ -51,7 +49,6 @@
         </div>
         <i data-feather="database" class="w-7 h-7 lg:w-8 lg:h-8 text-orange-500 flex-shrink-0"></i>
     </div>
-
     <div class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-xl border-l-4 border-yellow-500 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between gap-2">
         <div class="min-w-0">
             <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide leading-tight">Pending</p>
@@ -59,7 +56,6 @@
         </div>
         <i data-feather="clock" class="w-7 h-7 lg:w-8 lg:h-8 text-yellow-500 flex-shrink-0"></i>
     </div>
-
     <div class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-xl border-l-4 border-red-500 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between gap-2">
         <div class="min-w-0">
             <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide leading-tight">Overdue</p>
@@ -67,7 +63,6 @@
         </div>
         <i data-feather="alert-triangle" class="w-7 h-7 lg:w-8 lg:h-8 text-red-500 flex-shrink-0"></i>
     </div>
-
     <div class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-xl border-l-4 border-green-500 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between gap-2">
         <div class="min-w-0">
             <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide leading-tight">Completed</p>
@@ -75,7 +70,6 @@
         </div>
         <i data-feather="check-circle" class="w-7 h-7 lg:w-8 lg:h-8 text-green-500 flex-shrink-0"></i>
     </div>
-
 </div>
 
 <!-- ── DEPARTMENT BREAKDOWN ── -->
@@ -93,7 +87,6 @@
         'Project Management'            => ['icon' => 'briefcase',    'color' => 'red'],
         'Legal & Compliance'            => ['icon' => 'book',         'color' => 'gray'],
     ];
-
     $colorMap = [
         'indigo' => ['bg'=>'bg-indigo-50', 'icon'=>'text-indigo-500', 'badge'=>'bg-indigo-100 text-indigo-700', 'bar'=>'bg-indigo-500'],
         'blue'   => ['bg'=>'bg-blue-50',   'icon'=>'text-blue-500',   'badge'=>'bg-blue-100 text-blue-700',     'bar'=>'bg-blue-500'],
@@ -107,7 +100,6 @@
         'red'    => ['bg'=>'bg-red-50',    'icon'=>'text-red-500',    'badge'=>'bg-red-100 text-red-700',       'bar'=>'bg-red-500'],
         'gray'   => ['bg'=>'bg-gray-50',   'icon'=>'text-gray-500',   'badge'=>'bg-gray-100 text-gray-700',     'bar'=>'bg-gray-400'],
     ];
-
     $totalRopa = \App\Models\Ropa::count() ?: 1;
     $deptStats = [];
     foreach ($departments as $name => $meta) {
@@ -129,14 +121,9 @@
         </div>
         <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ count($departments) }} depts</span>
     </div>
-
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
         @foreach($departments as $deptName => $meta)
-            @php
-                $c   = $colorMap[$meta['color']];
-                $s   = $deptStats[$deptName];
-                $pct = round(($s['total'] / $totalRopa) * 100);
-            @endphp
+            @php $c = $colorMap[$meta['color']]; $s = $deptStats[$deptName]; $pct = round(($s['total'] / $totalRopa) * 100); @endphp
             <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow">
                 <div class="h-1 w-full {{ $c['bar'] }}"></div>
                 <div class="p-3 lg:p-4">
@@ -153,29 +140,11 @@
                         <div class="{{ $c['bar'] }} h-1.5 rounded-full" style="width: {{ $pct }}%"></div>
                     </div>
                     <div class="flex flex-wrap gap-1">
-                        @if($s['pending'])
-                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
-                                <span class="w-1.5 h-1.5 rounded-full bg-yellow-500 inline-block"></span>{{ $s['pending'] }} Pending
-                            </span>
-                        @endif
-                        @if($s['reviewed'])
-                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
-                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block"></span>{{ $s['reviewed'] }} Reviewed
-                            </span>
-                        @endif
-                        @if($s['approved'])
-                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-                                <span class="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span>{{ $s['approved'] }} Approved
-                            </span>
-                        @endif
-                        @if($s['rejected'])
-                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">
-                                <span class="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"></span>{{ $s['rejected'] }} Rejected
-                            </span>
-                        @endif
-                        @if($s['total'] === 0)
-                            <span class="text-xs text-gray-400 italic">No submissions yet</span>
-                        @endif
+                        @if($s['pending'])  <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700"><span class="w-1.5 h-1.5 rounded-full bg-yellow-500 inline-block"></span>{{ $s['pending'] }} Pending</span> @endif
+                        @if($s['reviewed']) <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700"><span class="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block"></span>{{ $s['reviewed'] }} Reviewed</span> @endif
+                        @if($s['approved']) <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700"><span class="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span>{{ $s['approved'] }} Approved</span> @endif
+                        @if($s['rejected']) <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700"><span class="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"></span>{{ $s['rejected'] }} Rejected</span> @endif
+                        @if($s['total'] === 0) <span class="text-xs text-gray-400 italic">No submissions yet</span> @endif
                     </div>
                 </div>
             </div>
@@ -186,6 +155,24 @@
 <!-- ── ROPA TABLE ── -->
 @php $allRopas = \App\Models\Ropa::with('user')->latest('created_at')->get(); @endphp
 
+<!-- Embed all row data as JSON for JS export -->
+<script id="ropaDataJson" type="application/json">
+[
+@foreach($allRopas as $i => $r)
+    {
+        "id":          {{ $r->id }},
+        "organisation": {{ json_encode($r->organisation_name ?? 'N/A') }},
+        "department":   {{ json_encode($r->department ?? $r->other_department ?? 'N/A') }},
+        "processes":    {{ json_encode(is_string($r->processes) ? implode(', ', json_decode($r->processes, true) ?? [$r->processes]) : (is_array($r->processes) ? implode(', ', $r->processes) : '—')) }},
+        "submitted_by": {{ json_encode($r->user->name ?? 'Unknown') }},
+        "email":        {{ json_encode($r->user->email ?? '') }},
+        "date":         "{{ $r->created_at->format('d M Y') }}",
+        "status":       {{ json_encode($r->status ?? 'Pending') }}
+    }{{ !$loop->last ? ',' : '' }}
+@endforeach
+]
+</script>
+
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
 
     <!-- Table top bar -->
@@ -195,7 +182,7 @@
                 <i data-feather="list" class="w-5 h-5 flex-shrink-0"></i>
                 All ROPA Submissions
             </h2>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
                 <select id="statusFilter"
                         class="flex-1 sm:flex-none px-3 py-1.5 rounded-lg border-2 border-white bg-white
                                text-gray-700 text-xs lg:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-orange-300">
@@ -205,11 +192,18 @@
                     <option value="Approved">Approved</option>
                     <option value="Rejected">Rejected</option>
                 </select>
-                <button onclick="exportTable()"
+                <!-- Selection info badge (hidden until rows selected) -->
+                <span id="selectionBadge"
+                      class="hidden items-center gap-1.5 px-3 py-1.5 bg-white/20 text-white rounded-lg text-xs font-semibold">
+                    <i data-feather="check-square" class="w-3.5 h-3.5"></i>
+                    <span id="selectionCount">0</span> selected
+                </span>
+                <!-- Export button -->
+                <button id="exportBtn" onclick="exportToExcel()"
                         class="inline-flex items-center gap-1.5 px-3 lg:px-4 py-1.5 bg-white text-orange-600
                                rounded-lg hover:bg-orange-50 font-semibold text-xs lg:text-sm whitespace-nowrap transition">
                     <i data-feather="download" class="w-3.5 h-3.5 lg:w-4 lg:h-4"></i>
-                    Export
+                    <span id="exportLabel">Export All</span>
                 </button>
             </div>
         </div>
@@ -223,20 +217,14 @@
                            font-semibold rounded-t-lg border-b-2 border-orange-500 text-orange-600
                            bg-orange-50 dark:bg-gray-700 transition-all">
                 All
-                <span class="ml-1 px-1.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700">
-                    {{ $allRopas->count() }}
-                </span>
+                <span class="ml-1 px-1.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700">{{ $allRopas->count() }}</span>
             </button>
             @foreach($departments as $deptName => $meta)
-                @php
-                    $tabCount = $allRopas->filter(fn($r) => ($r->department ?? $r->other_department ?? '') === $deptName)->count();
-                    $tc = $colorMap[$meta['color']];
-                @endphp
+                @php $tabCount = $allRopas->filter(fn($r) => ($r->department ?? $r->other_department ?? '') === $deptName)->count(); $tc = $colorMap[$meta['color']]; @endphp
                 <button data-dept="{{ $deptName }}"
                         class="dept-tab whitespace-nowrap px-3 lg:px-4 py-2 text-xs lg:text-sm
                                font-semibold rounded-t-lg border-b-2 border-transparent
-                               text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:border-gray-300
-                               transition-all">
+                               text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-all">
                     <i data-feather="{{ $meta['icon'] }}" class="w-3 h-3 inline-block mr-1 {{ $tc['icon'] }}"></i>
                     {{ $deptName }}
                     @if($tabCount > 0)
@@ -247,15 +235,27 @@
         </nav>
     </div>
 
-    <!-- Search -->
+    <!-- Search + bulk actions bar -->
     <div class="px-3 lg:px-6 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
-        <div class="relative">
-            <i data-feather="search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-            <input type="text" id="tableSearch"
-                   placeholder="Search by organisation, department, user, or status..."
-                   class="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg
-                          focus:ring-2 focus:ring-orange-500 focus:border-orange-500
-                          dark:bg-gray-800 dark:text-gray-200 bg-white">
+        <div class="flex flex-col sm:flex-row gap-2">
+            <!-- Search -->
+            <div class="relative flex-1">
+                <i data-feather="search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                <input type="text" id="tableSearch"
+                       placeholder="Search by organisation, department, user, or status..."
+                       class="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg
+                              focus:ring-2 focus:ring-orange-500 focus:border-orange-500
+                              dark:bg-gray-800 dark:text-gray-200 bg-white">
+            </div>
+            <!-- Bulk action: select all visible -->
+            <button id="selectAllBtn" onclick="toggleSelectAll()"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold
+                           text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800
+                           border border-gray-300 dark:border-gray-600 rounded-lg
+                           hover:bg-orange-50 hover:border-orange-300 hover:text-orange-700 transition whitespace-nowrap">
+                <i data-feather="check-square" class="w-3.5 h-3.5"></i>
+                <span id="selectAllLabel">Select All</span>
+            </button>
         </div>
     </div>
 
@@ -264,6 +264,11 @@
         <table class="w-full text-sm" id="ropaTable">
             <thead>
                 <tr class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
+                    <!-- Checkbox header -->
+                    <th class="px-3 py-3 w-10">
+                        <input type="checkbox" id="headerCheckbox" onchange="handleHeaderCheckbox(this)"
+                               class="w-4 h-4 rounded accent-orange-600 cursor-pointer">
+                    </th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">ID</th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Organisation</th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider hidden lg:table-cell">Department</th>
@@ -277,12 +282,18 @@
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                 @forelse($allRopas as $ropa)
                     @php $rowDept = $ropa->department ?? $ropa->other_department ?? ''; @endphp
-                    <tr class="ropa-row hover:bg-orange-50 dark:hover:bg-gray-700 transition-colors"
+                    <tr class="ropa-row hover:bg-orange-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
                         data-status="{{ $ropa->status ?? 'Pending' }}"
-                        data-dept="{{ $rowDept }}">
-                        <td class="px-4 py-3 whitespace-nowrap font-bold text-gray-900 dark:text-gray-100 text-xs">
-                            #{{ $ropa->id }}
+                        data-dept="{{ $rowDept }}"
+                        data-id="{{ $ropa->id }}"
+                        onclick="toggleRowSelect(this, event)">
+                        <!-- Row checkbox -->
+                        <td class="px-3 py-3 w-10" onclick="event.stopPropagation()">
+                            <input type="checkbox" class="row-checkbox w-4 h-4 rounded accent-orange-600 cursor-pointer"
+                                   data-id="{{ $ropa->id }}"
+                                   onchange="handleRowCheckbox()">
                         </td>
+                        <td class="px-4 py-3 whitespace-nowrap font-bold text-gray-900 dark:text-gray-100 text-xs">#{{ $ropa->id }}</td>
                         <td class="px-4 py-3">
                             <div class="flex items-center gap-2">
                                 <div class="flex-shrink-0 h-7 w-7 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
@@ -292,21 +303,14 @@
                             </div>
                         </td>
                         <td class="px-4 py-3 hidden lg:table-cell">
-                            @php
-                                $dept     = $rowDept ?: 'N/A';
-                                $deptMeta = $departments[$dept] ?? null;
-                                $deptC    = $deptMeta ? $colorMap[$deptMeta['color']] : $colorMap['gray'];
-                            @endphp
+                            @php $dept = $rowDept ?: 'N/A'; $deptMeta = $departments[$dept] ?? null; $deptC = $deptMeta ? $colorMap[$deptMeta['color']] : $colorMap['gray']; @endphp
                             <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold {{ $deptC['badge'] }}">
                                 @if($deptMeta)<i data-feather="{{ $deptMeta['icon'] }}" class="w-3 h-3"></i>@endif
                                 {{ $dept }}
                             </span>
                         </td>
                         <td class="px-4 py-3 hidden lg:table-cell">
-                            @php
-                                $rawActivity = $ropa->processes;
-                                $activity = is_string($rawActivity) ? implode(', ', json_decode($rawActivity, true) ?? [$rawActivity]) : (is_array($rawActivity) ? implode(', ', $rawActivity) : null);
-                            @endphp
+                            @php $rawActivity = $ropa->processes; $activity = is_string($rawActivity) ? implode(', ', json_decode($rawActivity, true) ?? [$rawActivity]) : (is_array($rawActivity) ? implode(', ', $rawActivity) : null); @endphp
                             @if($activity)
                                 <div class="flex items-center gap-1.5 max-w-[200px]">
                                     <i data-feather="zap" class="w-3 h-3 text-orange-400 flex-shrink-0"></i>
@@ -332,17 +336,10 @@
                             <div class="text-xs text-gray-400">{{ $ropa->created_at->format('h:i A') }}</div>
                         </td>
                         <td class="px-4 py-3">
-                            @php
-                                $status = $ropa->status ?? 'Pending';
-                                $sc = match($status) {
-                                    'Reviewed', 'Approved' => 'bg-green-100 text-green-700 border-green-200',
-                                    'Rejected'             => 'bg-red-100 text-red-700 border-red-200',
-                                    default                => 'bg-yellow-100 text-yellow-700 border-yellow-200'
-                                };
-                            @endphp
+                            @php $status = $ropa->status ?? 'Pending'; $sc = match($status) { 'Reviewed','Approved' => 'bg-green-100 text-green-700 border-green-200', 'Rejected' => 'bg-red-100 text-red-700 border-red-200', default => 'bg-yellow-100 text-yellow-700 border-yellow-200' }; @endphp
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold border {{ $sc }}">{{ $status }}</span>
                         </td>
-                        <td class="px-4 py-3 whitespace-nowrap">
+                        <td class="px-4 py-3 whitespace-nowrap" onclick="event.stopPropagation()">
                             <div class="flex items-center justify-center gap-1">
                                 <a href="{{ route('ropa.show', $ropa->id) }}"
                                    class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="View">
@@ -357,7 +354,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-4 py-16 text-center">
+                        <td colspan="9" class="px-4 py-16 text-center">
                             <i data-feather="inbox" class="w-12 h-12 text-gray-300 mx-auto mb-3"></i>
                             <p class="text-sm font-semibold text-gray-400">No ROPA records found</p>
                         </td>
@@ -367,60 +364,57 @@
         </table>
     </div>
 
-    <!-- ── MOBILE CARD LIST (xs only) ── -->
+    <!-- ── MOBILE CARD LIST ── -->
     <div class="sm:hidden divide-y divide-gray-100 dark:divide-gray-700" id="mobileCardList">
         @forelse($allRopas as $ropa)
             @php
-                $rowDept  = $ropa->department ?? $ropa->other_department ?? '';
-                $status   = $ropa->status ?? 'Pending';
+                $rowDept = $ropa->department ?? $ropa->other_department ?? '';
+                $status  = $ropa->status ?? 'Pending';
                 $deptMeta = $departments[$rowDept] ?? null;
                 $deptC    = $deptMeta ? $colorMap[$deptMeta['color']] : $colorMap['gray'];
-                $sc = match($status) {
-                    'Reviewed', 'Approved' => 'bg-green-100 text-green-700 border-green-200',
-                    'Rejected'             => 'bg-red-100 text-red-700 border-red-200',
-                    default                => 'bg-yellow-100 text-yellow-700 border-yellow-200'
-                };
+                $sc = match($status) { 'Reviewed','Approved'=>'bg-green-100 text-green-700 border-green-200', 'Rejected'=>'bg-red-100 text-red-700 border-red-200', default=>'bg-yellow-100 text-yellow-700 border-yellow-200' };
             @endphp
             <div class="mobile-card p-4 hover:bg-orange-50 dark:hover:bg-gray-700/50 transition-colors"
-                 data-status="{{ $status }}" data-dept="{{ $rowDept }}">
+                 data-status="{{ $status }}" data-dept="{{ $rowDept }}" data-id="{{ $ropa->id }}"
+                 onclick="toggleMobileSelect(this)">
                 <div class="flex items-start justify-between gap-2 mb-2.5">
                     <div class="flex items-center gap-2.5 min-w-0">
-                        <div class="flex-shrink-0 h-9 w-9 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
-                            <i data-feather="briefcase" class="w-4 h-4 text-white"></i>
-                        </div>
-                        <div class="min-w-0">
-                            <p class="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate">{{ $ropa->organisation_name ?? 'N/A' }}</p>
-                            <p class="text-xs text-gray-400">#{{ $ropa->id }} · {{ $ropa->created_at->format('M d, Y') }}</p>
+                        <!-- Mobile checkbox -->
+                        <input type="checkbox" class="mobile-checkbox row-checkbox w-4 h-4 rounded accent-orange-600 flex-shrink-0"
+                               data-id="{{ $ropa->id }}" onclick="event.stopPropagation()" onchange="handleRowCheckbox()">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <div class="flex-shrink-0 h-9 w-9 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
+                                <i data-feather="briefcase" class="w-4 h-4 text-white"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate">{{ $ropa->organisation_name ?? 'N/A' }}</p>
+                                <p class="text-xs text-gray-400">#{{ $ropa->id }} · {{ $ropa->created_at->format('M d, Y') }}</p>
+                            </div>
                         </div>
                     </div>
                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold border {{ $sc }} flex-shrink-0">{{ $status }}</span>
                 </div>
-                <div class="flex flex-wrap items-center gap-1.5 mb-3">
+                <div class="flex flex-wrap items-center gap-1.5 mb-2">
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold {{ $deptC['badge'] }}">
                         @if($deptMeta)<i data-feather="{{ $deptMeta['icon'] }}" class="w-3 h-3"></i>@endif
                         {{ $rowDept ?: 'N/A' }}
                     </span>
                     <span class="text-xs text-gray-500">{{ $ropa->user->name ?? 'Unknown' }}</span>
                 </div>
-                @php
-                    $rawActivity = $ropa->processes;
-                    $activity = is_string($rawActivity) ? implode(', ', json_decode($rawActivity, true) ?? [$rawActivity]) : (is_array($rawActivity) ? implode(', ', $rawActivity) : null);
-                @endphp
+                @php $rawActivity = $ropa->processes; $activity = is_string($rawActivity) ? implode(', ', json_decode($rawActivity, true) ?? [$rawActivity]) : (is_array($rawActivity) ? implode(', ', $rawActivity) : null); @endphp
                 @if($activity)
-                    <div class="flex items-center gap-1.5 mb-3 min-w-0">
+                    <div class="flex items-center gap-1.5 mb-2 min-w-0">
                         <i data-feather="zap" class="w-3 h-3 text-orange-400 flex-shrink-0"></i>
                         <span class="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">{{ $activity }}</span>
                     </div>
                 @endif
-                <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700" onclick="event.stopPropagation()">
                     <a href="{{ route('ropa.show', $ropa->id) }}"
-                       class="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold
-                              text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-all">
+                       class="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-all">
                         <i data-feather="eye" class="w-3.5 h-3.5"></i> View
                     </a>
                     <a href="{{ route('ropa.edit', $ropa->id) }}"
-                       class="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold
-                              text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg transition-all">
+                       class="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg transition-all">
                         <i data-feather="edit-2" class="w-3.5 h-3.5"></i> Edit
                     </a>
                 </div>
@@ -449,8 +443,12 @@
     </div>
 </div>
 
+<!-- SheetJS CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <script>
-    // ── User dropdown (desktop) ──
+    // ── Feather + user dropdown ──
+    feather.replace();
     const userBtn = document.getElementById('userMenuButton');
     const userDd  = document.getElementById('userDropdown');
     if (userBtn) {
@@ -458,33 +456,24 @@
         document.addEventListener('click', () => userDd.classList.add('hidden'));
     }
 
+    // ── All ROPA data from embedded JSON ──
+    const ALL_ROPA_DATA = JSON.parse(document.getElementById('ropaDataJson').textContent);
+
     // ── Filter state ──
     let activeDept = 'all', activeStatus = 'all', activeSearch = '';
 
-    function applyFilters() {
-        let visible = 0;
-        const all = [
-            ...document.querySelectorAll('#ropaTable tbody tr.ropa-row'),
-            ...document.querySelectorAll('.mobile-card')
-        ];
-        all.forEach(el => {
-            const dept   = (el.dataset.dept   || '').toLowerCase();
-            const status = (el.dataset.status || '').toLowerCase();
-            const text   = el.textContent.toLowerCase();
-            const show =
-                (activeDept   === 'all' || dept   === activeDept.toLowerCase()) &&
-                (activeStatus === 'all' || status === activeStatus.toLowerCase()) &&
-                (activeSearch === ''   || text.includes(activeSearch));
-            el.style.display = show ? '' : 'none';
-            if (show) visible++;
-        });
-        document.getElementById('visibleCount').textContent = visible / 2 | 0; // each record has table row + card
+    function matchesFilters(el) {
+        const dept   = (el.dataset.dept   || '').toLowerCase();
+        const status = (el.dataset.status || '').toLowerCase();
+        const text   = el.textContent.toLowerCase();
+        return (activeDept   === 'all' || dept   === activeDept.toLowerCase())
+            && (activeStatus === 'all' || status === activeStatus.toLowerCase())
+            && (activeSearch === ''    || text.includes(activeSearch));
     }
 
-    // Count only the visible rows (not duplicated by mobile cards)
     function applyFiltersFixed() {
-        let visible = 0;
         const isMobile = window.innerWidth < 640;
+        let visible = 0;
 
         document.querySelectorAll('#ropaTable tbody tr.ropa-row').forEach(el => {
             const show = matchesFilters(el);
@@ -496,37 +485,24 @@
             el.style.display = show ? '' : 'none';
             if (show && isMobile) visible++;
         });
-        if (!isMobile) {
-            // recount from table rows
-            visible = [...document.querySelectorAll('#ropaTable tbody tr.ropa-row')]
-                .filter(r => r.style.display !== 'none').length;
-        } else {
-            visible = [...document.querySelectorAll('.mobile-card')]
-                .filter(r => r.style.display !== 'none').length;
-        }
-        document.getElementById('visibleCount').textContent = visible;
-    }
 
-    function matchesFilters(el) {
-        const dept   = (el.dataset.dept   || '').toLowerCase();
-        const status = (el.dataset.status || '').toLowerCase();
-        const text   = el.textContent.toLowerCase();
-        return (activeDept   === 'all' || dept   === activeDept.toLowerCase())
-            && (activeStatus === 'all' || status === activeStatus.toLowerCase())
-            && (activeSearch === ''    || text.includes(activeSearch));
+        visible = isMobile
+            ? [...document.querySelectorAll('.mobile-card')].filter(r => r.style.display !== 'none').length
+            : [...document.querySelectorAll('#ropaTable tbody tr.ropa-row')].filter(r => r.style.display !== 'none').length;
+
+        document.getElementById('visibleCount').textContent = visible;
+        syncHeaderCheckbox();
     }
 
     document.getElementById('tableSearch').addEventListener('input', function () {
         activeSearch = this.value.toLowerCase().trim();
         applyFiltersFixed();
     });
-
     document.getElementById('statusFilter').addEventListener('change', function () {
         activeStatus = this.value;
         applyFiltersFixed();
         feather.replace();
     });
-
     document.querySelectorAll('.dept-tab').forEach(tab => {
         tab.addEventListener('click', function () {
             document.querySelectorAll('.dept-tab').forEach(t => {
@@ -542,28 +518,191 @@
         });
     });
 
-    function exportTable() {
-        alert('Export functionality — integrate with your preferred export library (Excel, CSV, etc.)');
+    // ── Multi-select logic ──
+    function getSelectedIds() {
+        return [...document.querySelectorAll('.row-checkbox:checked')].map(cb => parseInt(cb.dataset.id));
+    }
+
+    function updateSelectionUI() {
+        const ids    = getSelectedIds();
+        const count  = ids.length;
+        const badge  = document.getElementById('selectionBadge');
+        const label  = document.getElementById('exportLabel');
+        const countEl= document.getElementById('selectionCount');
+
+        if (count > 0) {
+            badge.classList.remove('hidden');
+            badge.classList.add('inline-flex');
+            countEl.textContent = count;
+            label.textContent   = `Export Selected (${count})`;
+        } else {
+            badge.classList.add('hidden');
+            badge.classList.remove('inline-flex');
+            label.textContent = 'Export All';
+        }
+        syncHeaderCheckbox();
+    }
+
+    function syncHeaderCheckbox() {
+        const headerCb   = document.getElementById('headerCheckbox');
+        if (!headerCb) return;
+        const visibleCbs = [...document.querySelectorAll('#ropaTable tbody tr.ropa-row')]
+            .filter(r => r.style.display !== 'none')
+            .map(r => r.querySelector('.row-checkbox'));
+        const checked    = visibleCbs.filter(cb => cb.checked).length;
+        headerCb.checked       = checked > 0 && checked === visibleCbs.length;
+        headerCb.indeterminate = checked > 0 && checked < visibleCbs.length;
+
+        // Sync Select All button label
+        const btn = document.getElementById('selectAllBtn');
+        const lbl = document.getElementById('selectAllLabel');
+        lbl.textContent = (checked === visibleCbs.length && visibleCbs.length > 0) ? 'Deselect All' : 'Select All';
+    }
+
+    // Click a table row to toggle its checkbox
+    function toggleRowSelect(row, event) {
+        if (event.target.tagName === 'A' || event.target.tagName === 'INPUT' || event.target.tagName === 'BUTTON') return;
+        const cb = row.querySelector('.row-checkbox');
+        cb.checked = !cb.checked;
+        row.classList.toggle('bg-orange-50', cb.checked);
+        row.classList.toggle('ring-1',       cb.checked);
+        row.classList.toggle('ring-orange-300', cb.checked);
+        handleRowCheckbox();
+    }
+
+    // Mobile card tap to select
+    function toggleMobileSelect(card) {
+        const cb = card.querySelector('.mobile-checkbox');
+        cb.checked = !cb.checked;
+        card.classList.toggle('bg-orange-50', cb.checked);
+        card.classList.toggle('ring-1',       cb.checked);
+        card.classList.toggle('ring-orange-300', cb.checked);
+        handleRowCheckbox();
+    }
+
+    function handleRowCheckbox() {
+        // Sync paired checkboxes (table row ↔ mobile card share same data-id)
+        const allCbs = [...document.querySelectorAll('.row-checkbox')];
+        const idMap  = {};
+        allCbs.forEach(cb => {
+            const id = cb.dataset.id;
+            if (!idMap[id]) idMap[id] = [];
+            idMap[id].push(cb);
+        });
+        Object.values(idMap).forEach(group => {
+            const checked = group.some(cb => cb.checked);
+            group.forEach(cb => { cb.checked = checked; });
+        });
+        updateSelectionUI();
+    }
+
+    function handleHeaderCheckbox(headerCb) {
+        const visibleRows = [...document.querySelectorAll('#ropaTable tbody tr.ropa-row')]
+            .filter(r => r.style.display !== 'none');
+        visibleRows.forEach(row => {
+            const cb = row.querySelector('.row-checkbox');
+            cb.checked = headerCb.checked;
+            row.classList.toggle('bg-orange-50',     headerCb.checked);
+            row.classList.toggle('ring-1',           headerCb.checked);
+            row.classList.toggle('ring-orange-300',  headerCb.checked);
+        });
+        handleRowCheckbox();
+    }
+
+    function toggleSelectAll() {
+        const visibleRows = [...document.querySelectorAll('#ropaTable tbody tr.ropa-row')]
+            .filter(r => r.style.display !== 'none');
+        const allChecked = visibleRows.every(r => r.querySelector('.row-checkbox').checked);
+        visibleRows.forEach(row => {
+            const cb = row.querySelector('.row-checkbox');
+            cb.checked = !allChecked;
+            row.classList.toggle('bg-orange-50',    !allChecked);
+            row.classList.toggle('ring-1',          !allChecked);
+            row.classList.toggle('ring-orange-300', !allChecked);
+        });
+        handleRowCheckbox();
+    }
+
+    // ── Excel Export via SheetJS ──
+    function exportToExcel() {
+        const selectedIds = getSelectedIds();
+        let exportData;
+
+        if (selectedIds.length > 0) {
+            // Export only selected rows
+            exportData = ALL_ROPA_DATA.filter(row => selectedIds.includes(row.id));
+        } else {
+            // Export all visible rows
+            const visibleIds = [...document.querySelectorAll('#ropaTable tbody tr.ropa-row')]
+                .filter(r => r.style.display !== 'none')
+                .map(r => parseInt(r.dataset.id));
+            exportData = ALL_ROPA_DATA.filter(row => visibleIds.includes(row.id));
+        }
+
+        if (exportData.length === 0) {
+            alert('No records to export.');
+            return;
+        }
+
+        // Build worksheet rows with friendly headers
+        const wsData = [
+            ['ID', 'Organisation', 'Department', 'Processing Activities', 'Submitted By', 'Email', 'Date Submitted', 'Status']
+        ];
+        exportData.forEach(row => {
+            wsData.push([
+                row.id,
+                row.organisation,
+                row.department,
+                row.processes,
+                row.submitted_by,
+                row.email,
+                row.date,
+                row.status,
+            ]);
+        });
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+        // Column widths
+        ws['!cols'] = [
+            { wch: 6 }, { wch: 30 }, { wch: 28 }, { wch: 45 },
+            { wch: 22 }, { wch: 30 }, { wch: 16 }, { wch: 12 }
+        ];
+
+        // Style header row bold (basic)
+        const headerRange = XLSX.utils.decode_range(ws['!ref']);
+        for (let C = headerRange.s.c; C <= headerRange.e.c; C++) {
+            const cell = ws[XLSX.utils.encode_cell({ r: 0, c: C })];
+            if (cell) cell.s = { font: { bold: true } };
+        }
+
+        XLSX.utils.book_append_sheet(wb, ws, 'ROPA Records');
+
+        const timestamp = new Date().toISOString().slice(0, 10);
+        const filename  = selectedIds.length > 0
+            ? `ROPA_Selected_${timestamp}.xlsx`
+            : `ROPA_Export_${timestamp}.xlsx`;
+
+        XLSX.writeFile(wb, filename);
     }
 
     document.addEventListener('DOMContentLoaded', () => feather.replace());
 </script>
 
 <style>
-    /* Tab scrollbar */
     .dept-tab-scroll::-webkit-scrollbar { height: 3px; }
     .dept-tab-scroll::-webkit-scrollbar-track { background: transparent; }
     .dept-tab-scroll::-webkit-scrollbar-thumb { background: #fdba74; border-radius: 4px; }
-
-    /* Table scrollbar */
     .overflow-x-auto::-webkit-scrollbar { height: 5px; }
     .overflow-x-auto::-webkit-scrollbar-track { background: #f9fafb; }
     .overflow-x-auto::-webkit-scrollbar-thumb { background: #ea580c; border-radius: 6px; }
-
     .dept-tab { transition: color .15s, border-color .15s, background-color .15s; }
-
-    /* Prevent any child from busting the layout width */
     * { box-sizing: border-box; }
+
+    /* Selected row highlight */
+    #ropaTable tbody tr.ropa-row.ring-1 { background-color: #fff7ed; }
+    .mobile-card.ring-1 { background-color: #fff7ed; }
 </style>
 
 @endsection
