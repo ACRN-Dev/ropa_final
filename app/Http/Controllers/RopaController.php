@@ -230,6 +230,25 @@ public function bulkDelete(Request $request)
     }
 
     /**
+ * Show the form for editing the specified ROPA record.
+ */
+
+    public function edit(Ropa $ropa)
+{
+    // Decode JSON array fields so Blade can check against them
+    $ropa->processes               = is_string($ropa->processes)
+        ? json_decode($ropa->processes, true) ?? [] : ($ropa->processes ?? []);
+
+    $ropa->lawful_basis            = is_string($ropa->lawful_basis)
+        ? json_decode($ropa->lawful_basis, true) ?? [] : ($ropa->lawful_basis ?? []);
+
+    $ropa->personal_data_categories = is_string($ropa->personal_data_categories)
+        ? json_decode($ropa->personal_data_categories, true) ?? [] : ($ropa->personal_data_categories ?? []);
+
+    return view('ropa.edit', compact('ropa'));
+}
+
+    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Ropa $ropa)

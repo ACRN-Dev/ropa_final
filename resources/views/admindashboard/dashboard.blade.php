@@ -267,6 +267,7 @@
                     <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">ID</th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Organisation</th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider hidden lg:table-cell">Department</th>
+                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider hidden lg:table-cell">Processing Activity</th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider hidden md:table-cell">Submitted By</th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider hidden lg:table-cell">Date</th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Status</th>
@@ -300,6 +301,20 @@
                                 @if($deptMeta)<i data-feather="{{ $deptMeta['icon'] }}" class="w-3 h-3"></i>@endif
                                 {{ $dept }}
                             </span>
+                        </td>
+                        <td class="px-4 py-3 hidden lg:table-cell">
+                            @php
+                                $rawActivity = $ropa->processes;
+                                $activity = is_string($rawActivity) ? implode(', ', json_decode($rawActivity, true) ?? [$rawActivity]) : (is_array($rawActivity) ? implode(', ', $rawActivity) : null);
+                            @endphp
+                            @if($activity)
+                                <div class="flex items-center gap-1.5 max-w-[200px]">
+                                    <i data-feather="zap" class="w-3 h-3 text-orange-400 flex-shrink-0"></i>
+                                    <span class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate" title="{{ $activity }}">{{ $activity }}</span>
+                                </div>
+                            @else
+                                <span class="text-xs text-gray-400 italic">—</span>
+                            @endif
                         </td>
                         <td class="px-4 py-3 hidden md:table-cell">
                             <div class="flex items-center gap-2">
@@ -342,7 +357,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-4 py-16 text-center">
+                        <td colspan="8" class="px-4 py-16 text-center">
                             <i data-feather="inbox" class="w-12 h-12 text-gray-300 mx-auto mb-3"></i>
                             <p class="text-sm font-semibold text-gray-400">No ROPA records found</p>
                         </td>
@@ -387,6 +402,16 @@
                     </span>
                     <span class="text-xs text-gray-500">{{ $ropa->user->name ?? 'Unknown' }}</span>
                 </div>
+                @php
+                    $rawActivity = $ropa->processes;
+                    $activity = is_string($rawActivity) ? implode(', ', json_decode($rawActivity, true) ?? [$rawActivity]) : (is_array($rawActivity) ? implode(', ', $rawActivity) : null);
+                @endphp
+                @if($activity)
+                    <div class="flex items-center gap-1.5 mb-3 min-w-0">
+                        <i data-feather="zap" class="w-3 h-3 text-orange-400 flex-shrink-0"></i>
+                        <span class="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">{{ $activity }}</span>
+                    </div>
+                @endif
                 <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
                     <a href="{{ route('ropa.show', $ropa->id) }}"
                        class="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold
