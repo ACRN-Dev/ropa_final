@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Request;
 
 class UserActivity extends Model
 {
@@ -16,33 +17,34 @@ class UserActivity extends Model
     protected $fillable = [
         'user_id',
         'action',
-        'model',
+        'model_type',   // fully qualified class name e.g. App\Models\Ropa
+        'model',        // short human name e.g. "ropa", "user"
         'model_id',
         'description',
         'old_values',
         'new_values',
         'ip_address',
         'user_agent',
+        'meta',
         'created_at',
     ];
 
     protected $casts = [
         'old_values' => 'array',
         'new_values' => 'array',
+        'meta'       => 'array',
         'created_at' => 'datetime',
     ];
 
-    /**
-     * Relationships
-     */
+    // ── Relationships ──────────────────────────────────────────
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Query Scopes
-     */
+    // ── Scopes ─────────────────────────────────────────────────
+
     public function scopeRecent(Builder $query, int $days = 7): Builder
     {
         return $query->where('created_at', '>=', now()->subDays($days));
@@ -63,14 +65,12 @@ class UserActivity extends Model
         return $query->where('user_id', $userId);
     }
 
-    /**
-     * Accessors
-     */
+    // ── Accessors ──────────────────────────────────────────────
+
     public function getModelLabelAttribute(): string
     {
-        // Show the model name if available, otherwise fallback to 'General'
         return $this->model
-            ? str_replace('_', ' ', ucfirst($this->model))
+            ? ucfirst(str_replace('_', ' ', $this->model))
             : 'General';
     }
 
@@ -81,12 +81,40 @@ class UserActivity extends Model
 
     public function getDescriptionLabelAttribute(): string
     {
-        // Use description if present, otherwise auto-generate
         if ($this->description) {
             return $this->description;
         }
-
-        $modelName = $this->model_label ?? 'record';
+        $modelName = $this->model_label;
         return ucfirst($this->action) . ' ' . $modelName;
+    }
+
+    // ── Static helper ─────────────────────────────────────────
+
+    /**
+     * Convenience method to log any event from anywhere.
+     *
+     * UserActivity::log('login', 'auth', null, 'User logged in');
+     */
+    public static function log(
+        string  $action,
+        ?string $model      = null,
+        ?int    $modelId    = null,
+        ?string $description = null,
+        array   $oldValues  = [],
+        array   $newValues  = [],
+        ?string $modelType  = null
+    ): self {
+        return self::create([
+            'user_id'     => auth()->id(),
+            'action'      => $action,
+            'model'       => $model,
+            'model_type'  => $modelType,
+            'model_id'    => $modelId,
+            'description' => $description,
+            'old_values'  => $oldValues ?: null,
+            'new_values'  => $newValues ?: null,
+            'ip_address'  => Request::ip(),
+            'user_agent'  => Request::userAgent(),
+        ]);
     }
 }

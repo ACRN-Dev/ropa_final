@@ -2,26 +2,24 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use App\Models\Ropa;
+use App\Models\User;
 use App\Observers\RopaObserver;
+use App\Observers\UserObserver;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        // ✅ Register the Ropa observer
+        // Register model observers — these fire automatically on
+        // created / updated / deleted events for each model.
         Ropa::observe(RopaObserver::class);
+        User::observe(UserObserver::class);
     }
 }

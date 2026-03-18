@@ -30,8 +30,6 @@
          onclick="closeSidebar()"></div>
 
     <!-- ── SIDEBAR ── -->
-    <!-- On mobile: hidden off-screen left, slides in via JS -->
-    <!-- On desktop (md+): always visible, static in flow -->
     <aside id="sidebar"
            class="fixed top-0 left-0 h-full w-56 bg-sidebar text-white flex flex-col items-center
                   z-40 overflow-y-auto
@@ -53,13 +51,18 @@
         <nav class="w-full px-3 pb-6 flex-1 flex flex-col">
             <ul class="w-full space-y-1">
 
+                <!-- ── MAIN ── -->
+                <li class="pb-1">
+                    <p class="text-white/30 text-xs font-semibold uppercase tracking-widest px-3">Main</p>
+                </li>
+
                 <li>
                     <a href="{{ route('admin.dashboard') }}"
                        class="flex items-center py-2.5 px-3 rounded-lg text-sm font-medium
                               hover:bg-white/10 transition-colors
                               {{ request()->routeIs('admin.dashboard') ? 'bg-white/15 text-white' : 'text-white/80' }}">
                         <i data-feather="home" class="w-4 h-4 mr-3 flex-shrink-0"></i>
-                        Home
+                        Dashboard
                     </a>
                 </li>
 
@@ -73,13 +76,86 @@
                     </a>
                 </li>
 
+                <!-- ── ROPA ── -->
+                <li class="pt-3 pb-1">
+                    <p class="text-white/30 text-xs font-semibold uppercase tracking-widest px-3">ROPA</p>
+                </li>
+
+               
+
+               
+
+               
+
+                <!-- ── MANAGEMENT ── -->
+                <li class="pt-3 pb-1">
+                    <p class="text-white/30 text-xs font-semibold uppercase tracking-widest px-3">Management</p>
+                </li>
+
                 <li>
                     <a href="{{ route('admin.users.index') }}"
                        class="flex items-center py-2.5 px-3 rounded-lg text-sm font-medium
                               hover:bg-white/10 transition-colors
-                              {{ request()->routeIs('admin.users.index') ? 'bg-white/15 text-white' : 'text-white/80' }}">
+                              {{ request()->routeIs('admin.users.*') ? 'bg-white/15 text-white' : 'text-white/80' }}">
                         <i data-feather="users" class="w-4 h-4 mr-3 flex-shrink-0"></i>
                         Manage Users
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ route('admin.tickets.index') }}"
+                       class="flex items-center py-2.5 px-3 rounded-lg text-sm font-medium
+                              hover:bg-white/10 transition-colors
+                              {{ request()->routeIs('admin.tickets.*') ? 'bg-white/15 text-white' : 'text-white/80' }}">
+                        <i data-feather="tag" class="w-4 h-4 mr-3 flex-shrink-0"></i>
+                        Tickets
+                        @php
+                            try {
+                                $openTickets = \App\Models\RopaIssue::where('status', '!=', 'resolved')->count();
+                            } catch (\Exception $e) {
+                                $openTickets = 0;
+                            }
+                        @endphp
+                        @if($openTickets > 0)
+                            <span class="ml-auto bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full leading-none">
+                                {{ $openTickets }}
+                            </span>
+                        @endif
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ route('risk-register.index') }}"
+                       class="flex items-center py-2.5 px-3 rounded-lg text-sm font-medium
+                              hover:bg-white/10 transition-colors
+                              {{ request()->routeIs('risk-register.*') ? 'bg-white/15 text-white' : 'text-white/80' }}">
+                        <i data-feather="shield" class="w-4 h-4 mr-3 flex-shrink-0"></i>
+                        Risk Register
+                    </a>
+                </li>
+
+                <!-- ── SYSTEM ── -->
+                <li class="pt-3 pb-1">
+                    <p class="text-white/30 text-xs font-semibold uppercase tracking-widest px-3">System</p>
+                </li>
+
+                <li>
+                    <a href="{{ route('activities.index') }}"
+                       class="flex items-center py-2.5 px-3 rounded-lg text-sm font-medium
+                              hover:bg-white/10 transition-colors
+                              {{ request()->routeIs('activities.*') ? 'bg-white/15 text-white' : 'text-white/80' }}">
+                        <i data-feather="file-text" class="w-4 h-4 mr-3 flex-shrink-0"></i>
+                        System Logs
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ route('help') }}"
+                       class="flex items-center py-2.5 px-3 rounded-lg text-sm font-medium
+                              hover:bg-white/10 transition-colors
+                              {{ request()->routeIs('help') ? 'bg-white/15 text-white' : 'text-white/80' }}">
+                        <i data-feather="help-circle" class="w-4 h-4 mr-3 flex-shrink-0"></i>
+                        Help
                     </a>
                 </li>
 
@@ -101,17 +177,14 @@
     </aside>
 
     <!-- ── MAIN CONTENT ── -->
-    <!-- ml-0 on mobile (sidebar hidden), ml-56 on desktop -->
     <div class="flex-1 flex flex-col min-w-0 md:ml-56">
 
         <!-- ── MOBILE TOP BAR ── -->
         <header class="md:hidden sticky top-0 z-20 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between px-4 h-14">
-            <!-- Hamburger -->
             <button onclick="openSidebar()" class="text-gray-600 dark:text-gray-300 p-1 -ml-1">
                 <i data-feather="menu" class="w-6 h-6"></i>
             </button>
             <span class="font-bold text-base text-gray-800 dark:text-gray-100">Admin Dashboard</span>
-            <!-- User avatar placeholder -->
             <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
                 {{ strtoupper(substr(Auth::user()->name ?? 'A', 0, 1)) }}
             </div>
