@@ -62,19 +62,22 @@
                               hover:bg-white/10 transition-colors
                               {{ request()->routeIs('admin.dashboard') ? 'bg-white/15 text-white' : 'text-white/80' }}">
                         <i data-feather="home" class="w-4 h-4 mr-3 flex-shrink-0"></i>
-                        Dashboard
+                        Home
                     </a>
                 </li>
 
-                <li>
-                    <a href="{{ route('admin.analytics') }}"
+                 <li>
+                    <a href="{{ route('risk-register.index') }}"
                        class="flex items-center py-2.5 px-3 rounded-lg text-sm font-medium
                               hover:bg-white/10 transition-colors
-                              {{ request()->routeIs('admin.analytics') ? 'bg-white/15 text-white' : 'text-white/80' }}">
-                        <i data-feather="bar-chart-2" class="w-4 h-4 mr-3 flex-shrink-0"></i>
-                        Analytics
+                              {{ request()->routeIs('risk-register.*') ? 'bg-white/15 text-white' : 'text-white/80' }}">
+                        <i data-feather="shield" class="w-4 h-4 mr-3 flex-shrink-0"></i>
+                        Risk Register
                     </a>
                 </li>
+
+
+
 
                 <!-- ── ROPA ── -->
                 <li class="pt-3 pb-1">
@@ -102,38 +105,18 @@
                     </a>
                 </li>
 
-                <li>
-                    <a href="{{ route('admin.tickets.index') }}"
+                                <li>
+                    <a href="{{ route('admin.analytics') }}"
                        class="flex items-center py-2.5 px-3 rounded-lg text-sm font-medium
                               hover:bg-white/10 transition-colors
-                              {{ request()->routeIs('admin.tickets.*') ? 'bg-white/15 text-white' : 'text-white/80' }}">
-                        <i data-feather="tag" class="w-4 h-4 mr-3 flex-shrink-0"></i>
-                        Tickets
-                        @php
-                            try {
-                                $openTickets = \App\Models\RopaIssue::where('status', '!=', 'resolved')->count();
-                            } catch (\Exception $e) {
-                                $openTickets = 0;
-                            }
-                        @endphp
-                        @if($openTickets > 0)
-                            <span class="ml-auto bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full leading-none">
-                                {{ $openTickets }}
-                            </span>
-                        @endif
+                              {{ request()->routeIs('admin.analytics') ? 'bg-white/15 text-white' : 'text-white/80' }}">
+                        <i data-feather="bar-chart-2" class="w-4 h-4 mr-3 flex-shrink-0"></i>
+                        Analytics
                     </a>
                 </li>
 
-                <li>
-                    <a href="{{ route('risk-register.index') }}"
-                       class="flex items-center py-2.5 px-3 rounded-lg text-sm font-medium
-                              hover:bg-white/10 transition-colors
-                              {{ request()->routeIs('risk-register.*') ? 'bg-white/15 text-white' : 'text-white/80' }}">
-                        <i data-feather="shield" class="w-4 h-4 mr-3 flex-shrink-0"></i>
-                        Risk Register
-                    </a>
-                </li>
-
+                
+               
                 <!-- ── SYSTEM ── -->
                 <li class="pt-3 pb-1">
                     <p class="text-white/30 text-xs font-semibold uppercase tracking-widest px-3">System</p>
