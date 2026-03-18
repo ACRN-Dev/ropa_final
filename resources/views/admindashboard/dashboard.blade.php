@@ -161,13 +161,13 @@
 @foreach($allRopas as $i => $r)
     {
         "id":          {{ $r->id }},
-        "organisation": {{ json_encode($r->organisation_name ?? 'N/A') }},
-        "department":   {{ json_encode($r->department ?? $r->other_department ?? 'N/A') }},
-        "processes":    {{ json_encode(is_string($r->processes) ? implode(', ', json_decode($r->processes, true) ?? [$r->processes]) : (is_array($r->processes) ? implode(', ', $r->processes) : '—')) }},
-        "submitted_by": {{ json_encode($r->user->name ?? 'Unknown') }},
-        "email":        {{ json_encode($r->user->email ?? '') }},
+        "organisation": {!! json_encode($r->organisation_name ?? 'N/A') !!},
+        "department":   {!! json_encode($r->department ?? $r->other_department ?? 'N/A') !!},
+        "processes":    {!! json_encode(is_string($r->processes) ? implode(', ', json_decode($r->processes, true) ?? [$r->processes]) : (is_array($r->processes) ? implode(', ', $r->processes) : '—')) !!},
+        "submitted_by": {!! json_encode($r->user->name ?? 'Unknown') !!},
+        "email":        {!! json_encode($r->user->email ?? '') !!},
         "date":         "{{ $r->created_at->format('d M Y') }}",
-        "status":       {{ json_encode($r->status ?? 'Pending') }}
+        "status":       {!! json_encode($r->status ?? 'Pending') !!}
     }{{ !$loop->last ? ',' : '' }}
 @endforeach
 ]
@@ -192,7 +192,7 @@
                     <option value="Approved">Approved</option>
                     <option value="Rejected">Rejected</option>
                 </select>
-                <!-- Selection info badge (hidden until rows selected) -->
+                <!-- Selection info badge -->
                 <span id="selectionBadge"
                       class="hidden items-center gap-1.5 px-3 py-1.5 bg-white/20 text-white rounded-lg text-xs font-semibold">
                     <i data-feather="check-square" class="w-3.5 h-3.5"></i>
@@ -212,19 +212,16 @@
     <!-- Department tabs -->
     <div class="border-b border-gray-200 dark:border-gray-700 overflow-x-auto dept-tab-scroll">
         <nav id="deptTabs" class="flex min-w-max px-3 lg:px-6 gap-0.5 pt-2 lg:pt-3">
-            <button data-dept="all"
-                    class="dept-tab active-tab whitespace-nowrap px-3 lg:px-4 py-2 text-xs lg:text-sm
-                           font-semibold rounded-t-lg border-b-2 border-orange-500 text-orange-600
-                           bg-orange-50 dark:bg-gray-700 transition-all">
+            <button data-dept="all" class="dept-tab whitespace-nowrap px-3 lg:px-4 py-2 text-xs lg:text-sm font-semibold rounded-t-lg">
                 All
                 <span class="ml-1 px-1.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700">{{ $allRopas->count() }}</span>
             </button>
             @foreach($departments as $deptName => $meta)
-                @php $tabCount = $allRopas->filter(fn($r) => ($r->department ?? $r->other_department ?? '') === $deptName)->count(); $tc = $colorMap[$meta['color']]; @endphp
-                <button data-dept="{{ $deptName }}"
-                        class="dept-tab whitespace-nowrap px-3 lg:px-4 py-2 text-xs lg:text-sm
-                               font-semibold rounded-t-lg border-b-2 border-transparent
-                               text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-all">
+                @php
+                    $tabCount = $allRopas->filter(fn($r) => ($r->department ?? $r->other_department ?? '') === $deptName)->count();
+                    $tc = $colorMap[$meta['color']];
+                @endphp
+                <button data-dept="{{ $deptName }}" class="dept-tab whitespace-nowrap px-3 lg:px-4 py-2 text-xs lg:text-sm font-semibold rounded-t-lg">
                     <i data-feather="{{ $meta['icon'] }}" class="w-3 h-3 inline-block mr-1 {{ $tc['icon'] }}"></i>
                     {{ $deptName }}
                     @if($tabCount > 0)
@@ -238,7 +235,6 @@
     <!-- Search + bulk actions bar -->
     <div class="px-3 lg:px-6 py-3 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
         <div class="flex flex-col sm:flex-row gap-2">
-            <!-- Search -->
             <div class="relative flex-1">
                 <i data-feather="search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
                 <input type="text" id="tableSearch"
@@ -247,7 +243,6 @@
                               focus:ring-2 focus:ring-orange-500 focus:border-orange-500
                               dark:bg-gray-800 dark:text-gray-200 bg-white">
             </div>
-            <!-- Bulk action: select all visible -->
             <button id="selectAllBtn" onclick="toggleSelectAll()"
                     class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold
                            text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800
@@ -259,12 +254,11 @@
         </div>
     </div>
 
-    <!-- ── DESKTOP TABLE (sm and up) ── -->
+    <!-- ── DESKTOP TABLE ── -->
     <div class="hidden sm:block overflow-x-auto">
         <table class="w-full text-sm" id="ropaTable">
             <thead>
                 <tr class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
-                    <!-- Checkbox header -->
                     <th class="px-3 py-3 w-10">
                         <input type="checkbox" id="headerCheckbox" onchange="handleHeaderCheckbox(this)"
                                class="w-4 h-4 rounded accent-orange-600 cursor-pointer">
@@ -287,7 +281,6 @@
                         data-dept="{{ $rowDept }}"
                         data-id="{{ $ropa->id }}"
                         onclick="toggleRowSelect(this, event)">
-                        <!-- Row checkbox -->
                         <td class="px-3 py-3 w-10" onclick="event.stopPropagation()">
                             <input type="checkbox" class="row-checkbox w-4 h-4 rounded accent-orange-600 cursor-pointer"
                                    data-id="{{ $ropa->id }}"
@@ -368,18 +361,21 @@
     <div class="sm:hidden divide-y divide-gray-100 dark:divide-gray-700" id="mobileCardList">
         @forelse($allRopas as $ropa)
             @php
-                $rowDept = $ropa->department ?? $ropa->other_department ?? '';
-                $status  = $ropa->status ?? 'Pending';
+                $rowDept  = $ropa->department ?? $ropa->other_department ?? '';
+                $status   = $ropa->status ?? 'Pending';
                 $deptMeta = $departments[$rowDept] ?? null;
                 $deptC    = $deptMeta ? $colorMap[$deptMeta['color']] : $colorMap['gray'];
-                $sc = match($status) { 'Reviewed','Approved'=>'bg-green-100 text-green-700 border-green-200', 'Rejected'=>'bg-red-100 text-red-700 border-red-200', default=>'bg-yellow-100 text-yellow-700 border-yellow-200' };
+                $sc = match($status) {
+                    'Reviewed','Approved' => 'bg-green-100 text-green-700 border-green-200',
+                    'Rejected'            => 'bg-red-100 text-red-700 border-red-200',
+                    default               => 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                };
             @endphp
             <div class="mobile-card p-4 hover:bg-orange-50 dark:hover:bg-gray-700/50 transition-colors"
                  data-status="{{ $status }}" data-dept="{{ $rowDept }}" data-id="{{ $ropa->id }}"
                  onclick="toggleMobileSelect(this)">
                 <div class="flex items-start justify-between gap-2 mb-2.5">
                     <div class="flex items-center gap-2.5 min-w-0">
-                        <!-- Mobile checkbox -->
                         <input type="checkbox" class="mobile-checkbox row-checkbox w-4 h-4 rounded accent-orange-600 flex-shrink-0"
                                data-id="{{ $ropa->id }}" onclick="event.stopPropagation()" onchange="handleRowCheckbox()">
                         <div class="flex items-center gap-2 min-w-0">
@@ -446,263 +442,236 @@
 <!-- SheetJS CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
+<style>
+    .dept-tab-scroll::-webkit-scrollbar        { height: 3px; }
+    .dept-tab-scroll::-webkit-scrollbar-track  { background: transparent; }
+    .dept-tab-scroll::-webkit-scrollbar-thumb  { background: #fdba74; border-radius: 4px; }
+    .overflow-x-auto::-webkit-scrollbar        { height: 5px; }
+    .overflow-x-auto::-webkit-scrollbar-track  { background: #f9fafb; }
+    .overflow-x-auto::-webkit-scrollbar-thumb  { background: #ea580c; border-radius: 6px; }
+    .dept-tab { transition: color .15s, border-color .15s, background-color .15s; }
+    .row-selected { background-color: #fff7ed !important; outline: 1px solid #fdba74; outline-offset: -1px; }
+    * { box-sizing: border-box; }
+</style>
+
 <script>
-    // ── Feather + user dropdown ──
-    feather.replace();
-    const userBtn = document.getElementById('userMenuButton');
-    const userDd  = document.getElementById('userDropdown');
+// ── Run immediately — no DOMContentLoaded wrapper needed because
+//    this <script> tag appears AFTER all the HTML it references. ──
+
+(function () {
+
+    // ── Feather icons ──
+    // Poll until feather is available (unpkg CDN load timing)
+    function initFeather() {
+        if (window.feather) { feather.replace(); } else { setTimeout(initFeather, 50); }
+    }
+    initFeather();
+
+    // ── User dropdown ──
+    var userBtn = document.getElementById('userMenuButton');
+    var userDd  = document.getElementById('userDropdown');
     if (userBtn) {
-        userBtn.addEventListener('click', e => { e.stopPropagation(); userDd.classList.toggle('hidden'); });
-        document.addEventListener('click', () => userDd.classList.add('hidden'));
+        userBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            userDd.classList.toggle('hidden');
+        });
+        document.addEventListener('click', function () { userDd.classList.add('hidden'); });
     }
 
-    // ── All ROPA data from embedded JSON ──
-    const ALL_ROPA_DATA = JSON.parse(document.getElementById('ropaDataJson').textContent);
+    // ── All ROPA data ──
+    var ALL_ROPA_DATA = JSON.parse(document.getElementById('ropaDataJson').textContent);
 
     // ── Filter state ──
-    let activeDept = 'all', activeStatus = 'all', activeSearch = '';
+    var activeDept   = 'all';
+    var activeStatus = 'all';
+    var activeSearch = '';
 
-    function matchesFilters(el) {
-        const dept   = (el.dataset.dept   || '').toLowerCase();
-        const status = (el.dataset.status || '').toLowerCase();
-        const text   = el.textContent.toLowerCase();
-        return (activeDept   === 'all' || dept   === activeDept.toLowerCase())
-            && (activeStatus === 'all' || status === activeStatus.toLowerCase())
-            && (activeSearch === ''    || text.includes(activeSearch));
+    // ── Tab styling via inline styles (no class names = no Tailwind dependency) ──
+    var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    function styleTabInactive(t) {
+        t.style.setProperty('border-bottom', '2px solid transparent', 'important');
+        t.style.setProperty('color',            isDark ? '#9ca3af' : '#6b7280', 'important');
+        t.style.setProperty('background-color', 'transparent', 'important');
     }
 
-    function applyFiltersFixed() {
-        const isMobile = window.innerWidth < 640;
-        let visible = 0;
+    function styleTabActive(t) {
+        t.style.setProperty('border-bottom',    '2px solid #f97316', 'important');
+        t.style.setProperty('color',            isDark ? '#fb923c' : '#ea580c', 'important');
+        t.style.setProperty('background-color', isDark ? '#374151' : '#fff7ed', 'important');
+    }
 
-        document.querySelectorAll('#ropaTable tbody tr.ropa-row').forEach(el => {
-            const show = matchesFilters(el);
-            el.style.display = show ? '' : 'none';
-            if (show && !isMobile) visible++;
+    function setActiveTab(tab) {
+        document.querySelectorAll('.dept-tab').forEach(function (t) { styleTabInactive(t); });
+        styleTabActive(tab);
+    }
+
+    // Init all tabs
+    document.querySelectorAll('.dept-tab').forEach(function (t) { styleTabInactive(t); });
+    var allTab = document.querySelector('[data-dept="all"]');
+    if (allTab) styleTabActive(allTab);
+
+    // Tab click listeners
+    document.querySelectorAll('.dept-tab').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            setActiveTab(this);
+            this.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            activeDept = this.dataset.dept;
+            applyFilters();
         });
-        document.querySelectorAll('.mobile-card').forEach(el => {
-            const show = matchesFilters(el);
-            el.style.display = show ? '' : 'none';
-            if (show && isMobile) visible++;
+    });
+
+    // ── Filter logic ──
+    function matchesFilters(el) {
+        var dept     = (el.dataset.dept   || '').toLowerCase().trim();
+        var status   = (el.dataset.status || '').toLowerCase().trim();
+        var text     = el.textContent.toLowerCase();
+        var deptOk   = activeDept   === 'all' || dept   === activeDept.toLowerCase().trim();
+        var statusOk = activeStatus === 'all' || status === activeStatus.toLowerCase().trim();
+        var searchOk = activeSearch === ''    || text.includes(activeSearch);
+        return deptOk && statusOk && searchOk;
+    }
+
+    function applyFilters() {
+        document.querySelectorAll('#ropaTable tbody tr.ropa-row').forEach(function (el) {
+            el.style.display = matchesFilters(el) ? '' : 'none';
         });
-
-        visible = isMobile
-            ? [...document.querySelectorAll('.mobile-card')].filter(r => r.style.display !== 'none').length
-            : [...document.querySelectorAll('#ropaTable tbody tr.ropa-row')].filter(r => r.style.display !== 'none').length;
-
+        document.querySelectorAll('.mobile-card').forEach(function (el) {
+            el.style.display = matchesFilters(el) ? '' : 'none';
+        });
+        var isMobile = window.innerWidth < 640;
+        var visible = isMobile
+            ? Array.from(document.querySelectorAll('.mobile-card')).filter(function (r) { return r.style.display !== 'none'; }).length
+            : Array.from(document.querySelectorAll('#ropaTable tbody tr.ropa-row')).filter(function (r) { return r.style.display !== 'none'; }).length;
         document.getElementById('visibleCount').textContent = visible;
         syncHeaderCheckbox();
+        if (window.feather) feather.replace();
     }
 
     document.getElementById('tableSearch').addEventListener('input', function () {
         activeSearch = this.value.toLowerCase().trim();
-        applyFiltersFixed();
-    });
-    document.getElementById('statusFilter').addEventListener('change', function () {
-        activeStatus = this.value;
-        applyFiltersFixed();
-        feather.replace();
-    });
-    document.querySelectorAll('.dept-tab').forEach(tab => {
-        tab.addEventListener('click', function () {
-            document.querySelectorAll('.dept-tab').forEach(t => {
-                t.classList.remove('active-tab','border-orange-500','text-orange-600','bg-orange-50','dark:bg-gray-700');
-                t.classList.add('border-transparent','text-gray-500','dark:text-gray-400');
-            });
-            this.classList.add('active-tab','border-orange-500','text-orange-600','bg-orange-50','dark:bg-gray-700');
-            this.classList.remove('border-transparent','text-gray-500','dark:text-gray-400');
-            this.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'center' });
-            activeDept = this.dataset.dept;
-            applyFiltersFixed();
-            feather.replace();
-        });
+        applyFilters();
     });
 
-    // ── Multi-select logic ──
+    document.getElementById('statusFilter').addEventListener('change', function () {
+        activeStatus = this.value;
+        applyFilters();
+    });
+
+    // ── Multi-select ──
     function getSelectedIds() {
-        return [...document.querySelectorAll('.row-checkbox:checked')].map(cb => parseInt(cb.dataset.id));
+        return Array.from(document.querySelectorAll('.row-checkbox:checked')).map(function (cb) { return parseInt(cb.dataset.id); });
+    }
+
+    function highlightRow(row, on) {
+        if (on) { row.classList.add('row-selected'); } else { row.classList.remove('row-selected'); }
     }
 
     function updateSelectionUI() {
-        const ids    = getSelectedIds();
-        const count  = ids.length;
-        const badge  = document.getElementById('selectionBadge');
-        const label  = document.getElementById('exportLabel');
-        const countEl= document.getElementById('selectionCount');
-
+        var count   = getSelectedIds().length;
+        var badge   = document.getElementById('selectionBadge');
+        var label   = document.getElementById('exportLabel');
+        var countEl = document.getElementById('selectionCount');
         if (count > 0) {
-            badge.classList.remove('hidden');
-            badge.classList.add('inline-flex');
+            badge.classList.remove('hidden'); badge.classList.add('inline-flex');
             countEl.textContent = count;
-            label.textContent   = `Export Selected (${count})`;
+            label.textContent   = 'Export Selected (' + count + ')';
         } else {
-            badge.classList.add('hidden');
-            badge.classList.remove('inline-flex');
+            badge.classList.add('hidden'); badge.classList.remove('inline-flex');
             label.textContent = 'Export All';
         }
         syncHeaderCheckbox();
     }
 
     function syncHeaderCheckbox() {
-        const headerCb   = document.getElementById('headerCheckbox');
+        var headerCb = document.getElementById('headerCheckbox');
         if (!headerCb) return;
-        const visibleCbs = [...document.querySelectorAll('#ropaTable tbody tr.ropa-row')]
-            .filter(r => r.style.display !== 'none')
-            .map(r => r.querySelector('.row-checkbox'));
-        const checked    = visibleCbs.filter(cb => cb.checked).length;
-        headerCb.checked       = checked > 0 && checked === visibleCbs.length;
-        headerCb.indeterminate = checked > 0 && checked < visibleCbs.length;
-
-        // Sync Select All button label
-        const btn = document.getElementById('selectAllBtn');
-        const lbl = document.getElementById('selectAllLabel');
-        lbl.textContent = (checked === visibleCbs.length && visibleCbs.length > 0) ? 'Deselect All' : 'Select All';
+        var visibleCbs = Array.from(document.querySelectorAll('#ropaTable tbody tr.ropa-row'))
+            .filter(function (r) { return r.style.display !== 'none'; })
+            .map(function (r) { return r.querySelector('.row-checkbox'); }).filter(Boolean);
+        var n = visibleCbs.filter(function (cb) { return cb.checked; }).length;
+        headerCb.checked       = n > 0 && n === visibleCbs.length;
+        headerCb.indeterminate = n > 0 && n < visibleCbs.length;
+        var lbl = document.getElementById('selectAllLabel');
+        if (lbl) lbl.textContent = (n === visibleCbs.length && visibleCbs.length > 0) ? 'Deselect All' : 'Select All';
     }
 
-    // Click a table row to toggle its checkbox
-    function toggleRowSelect(row, event) {
-        if (event.target.tagName === 'A' || event.target.tagName === 'INPUT' || event.target.tagName === 'BUTTON') return;
-        const cb = row.querySelector('.row-checkbox');
+    function syncPaired() {
+        var idMap = {};
+        Array.from(document.querySelectorAll('.row-checkbox')).forEach(function (cb) {
+            if (!idMap[cb.dataset.id]) idMap[cb.dataset.id] = [];
+            idMap[cb.dataset.id].push(cb);
+        });
+        Object.values(idMap).forEach(function (g) {
+            var on = g.some(function (cb) { return cb.checked; });
+            g.forEach(function (cb) { cb.checked = on; });
+        });
+    }
+
+    window.toggleRowSelect = function (row, event) {
+        if (['A','INPUT','BUTTON'].indexOf(event.target.tagName) !== -1) return;
+        var cb = row.querySelector('.row-checkbox');
+        if (!cb) return;
         cb.checked = !cb.checked;
-        row.classList.toggle('bg-orange-50', cb.checked);
-        row.classList.toggle('ring-1',       cb.checked);
-        row.classList.toggle('ring-orange-300', cb.checked);
-        handleRowCheckbox();
-    }
+        highlightRow(row, cb.checked);
+        syncPaired(); updateSelectionUI();
+    };
 
-    // Mobile card tap to select
-    function toggleMobileSelect(card) {
-        const cb = card.querySelector('.mobile-checkbox');
+    window.toggleMobileSelect = function (card) {
+        var cb = card.querySelector('.mobile-checkbox');
+        if (!cb) return;
         cb.checked = !cb.checked;
-        card.classList.toggle('bg-orange-50', cb.checked);
-        card.classList.toggle('ring-1',       cb.checked);
-        card.classList.toggle('ring-orange-300', cb.checked);
-        handleRowCheckbox();
-    }
+        highlightRow(card, cb.checked);
+        syncPaired(); updateSelectionUI();
+    };
 
-    function handleRowCheckbox() {
-        // Sync paired checkboxes (table row ↔ mobile card share same data-id)
-        const allCbs = [...document.querySelectorAll('.row-checkbox')];
-        const idMap  = {};
-        allCbs.forEach(cb => {
-            const id = cb.dataset.id;
-            if (!idMap[id]) idMap[id] = [];
-            idMap[id].push(cb);
+    window.handleRowCheckbox    = function () { syncPaired(); updateSelectionUI(); };
+
+    window.handleHeaderCheckbox = function (headerCb) {
+        Array.from(document.querySelectorAll('#ropaTable tbody tr.ropa-row'))
+            .filter(function (r) { return r.style.display !== 'none'; })
+            .forEach(function (row) {
+                var cb = row.querySelector('.row-checkbox');
+                if (!cb) return;
+                cb.checked = headerCb.checked;
+                highlightRow(row, headerCb.checked);
+            });
+        syncPaired(); updateSelectionUI();
+    };
+
+    window.toggleSelectAll = function () {
+        var rows = Array.from(document.querySelectorAll('#ropaTable tbody tr.ropa-row')).filter(function (r) { return r.style.display !== 'none'; });
+        var all  = rows.every(function (r) { var cb = r.querySelector('.row-checkbox'); return cb && cb.checked; });
+        rows.forEach(function (row) {
+            var cb = row.querySelector('.row-checkbox');
+            if (!cb) return;
+            cb.checked = !all;
+            highlightRow(row, !all);
         });
-        Object.values(idMap).forEach(group => {
-            const checked = group.some(cb => cb.checked);
-            group.forEach(cb => { cb.checked = checked; });
-        });
-        updateSelectionUI();
-    }
+        syncPaired(); updateSelectionUI();
+    };
 
-    function handleHeaderCheckbox(headerCb) {
-        const visibleRows = [...document.querySelectorAll('#ropaTable tbody tr.ropa-row')]
-            .filter(r => r.style.display !== 'none');
-        visibleRows.forEach(row => {
-            const cb = row.querySelector('.row-checkbox');
-            cb.checked = headerCb.checked;
-            row.classList.toggle('bg-orange-50',     headerCb.checked);
-            row.classList.toggle('ring-1',           headerCb.checked);
-            row.classList.toggle('ring-orange-300',  headerCb.checked);
-        });
-        handleRowCheckbox();
-    }
-
-    function toggleSelectAll() {
-        const visibleRows = [...document.querySelectorAll('#ropaTable tbody tr.ropa-row')]
-            .filter(r => r.style.display !== 'none');
-        const allChecked = visibleRows.every(r => r.querySelector('.row-checkbox').checked);
-        visibleRows.forEach(row => {
-            const cb = row.querySelector('.row-checkbox');
-            cb.checked = !allChecked;
-            row.classList.toggle('bg-orange-50',    !allChecked);
-            row.classList.toggle('ring-1',          !allChecked);
-            row.classList.toggle('ring-orange-300', !allChecked);
-        });
-        handleRowCheckbox();
-    }
-
-    // ── Excel Export via SheetJS ──
-    function exportToExcel() {
-        const selectedIds = getSelectedIds();
-        let exportData;
-
-        if (selectedIds.length > 0) {
-            // Export only selected rows
-            exportData = ALL_ROPA_DATA.filter(row => selectedIds.includes(row.id));
+    window.exportToExcel = function () {
+        var sel = getSelectedIds();
+        var data;
+        if (sel.length > 0) {
+            data = ALL_ROPA_DATA.filter(function (r) { return sel.indexOf(r.id) !== -1; });
         } else {
-            // Export all visible rows
-            const visibleIds = [...document.querySelectorAll('#ropaTable tbody tr.ropa-row')]
-                .filter(r => r.style.display !== 'none')
-                .map(r => parseInt(r.dataset.id));
-            exportData = ALL_ROPA_DATA.filter(row => visibleIds.includes(row.id));
+            var vis = Array.from(document.querySelectorAll('#ropaTable tbody tr.ropa-row')).filter(function (r) { return r.style.display !== 'none'; }).map(function (r) { return parseInt(r.dataset.id); });
+            data = ALL_ROPA_DATA.filter(function (r) { return vis.indexOf(r.id) !== -1; });
         }
-
-        if (exportData.length === 0) {
-            alert('No records to export.');
-            return;
-        }
-
-        // Build worksheet rows with friendly headers
-        const wsData = [
-            ['ID', 'Organisation', 'Department', 'Processing Activities', 'Submitted By', 'Email', 'Date Submitted', 'Status']
-        ];
-        exportData.forEach(row => {
-            wsData.push([
-                row.id,
-                row.organisation,
-                row.department,
-                row.processes,
-                row.submitted_by,
-                row.email,
-                row.date,
-                row.status,
-            ]);
-        });
-
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-        // Column widths
-        ws['!cols'] = [
-            { wch: 6 }, { wch: 30 }, { wch: 28 }, { wch: 45 },
-            { wch: 22 }, { wch: 30 }, { wch: 16 }, { wch: 12 }
-        ];
-
-        // Style header row bold (basic)
-        const headerRange = XLSX.utils.decode_range(ws['!ref']);
-        for (let C = headerRange.s.c; C <= headerRange.e.c; C++) {
-            const cell = ws[XLSX.utils.encode_cell({ r: 0, c: C })];
-            if (cell) cell.s = { font: { bold: true } };
-        }
-
+        if (!data.length) { alert('No records to export.'); return; }
+        var ws_data = [['ID','Organisation','Department','Processing Activities','Submitted By','Email','Date Submitted','Status']];
+        data.forEach(function (r) { ws_data.push([r.id,r.organisation,r.department,r.processes,r.submitted_by,r.email,r.date,r.status]); });
+        var wb = XLSX.utils.book_new();
+        var ws = XLSX.utils.aoa_to_sheet(ws_data);
+        ws['!cols'] = [{wch:6},{wch:30},{wch:28},{wch:45},{wch:22},{wch:30},{wch:16},{wch:12}];
         XLSX.utils.book_append_sheet(wb, ws, 'ROPA Records');
+        var ts = new Date().toISOString().slice(0,10);
+        XLSX.writeFile(wb, sel.length > 0 ? 'ROPA_Selected_'+ts+'.xlsx' : 'ROPA_Export_'+ts+'.xlsx');
+    };
 
-        const timestamp = new Date().toISOString().slice(0, 10);
-        const filename  = selectedIds.length > 0
-            ? `ROPA_Selected_${timestamp}.xlsx`
-            : `ROPA_Export_${timestamp}.xlsx`;
-
-        XLSX.writeFile(wb, filename);
-    }
-
-    document.addEventListener('DOMContentLoaded', () => feather.replace());
+}());
 </script>
-
-<style>
-    .dept-tab-scroll::-webkit-scrollbar { height: 3px; }
-    .dept-tab-scroll::-webkit-scrollbar-track { background: transparent; }
-    .dept-tab-scroll::-webkit-scrollbar-thumb { background: #fdba74; border-radius: 4px; }
-    .overflow-x-auto::-webkit-scrollbar { height: 5px; }
-    .overflow-x-auto::-webkit-scrollbar-track { background: #f9fafb; }
-    .overflow-x-auto::-webkit-scrollbar-thumb { background: #ea580c; border-radius: 6px; }
-    .dept-tab { transition: color .15s, border-color .15s, background-color .15s; }
-    * { box-sizing: border-box; }
-
-    /* Selected row highlight */
-    #ropaTable tbody tr.ropa-row.ring-1 { background-color: #fff7ed; }
-    .mobile-card.ring-1 { background-color: #fff7ed; }
-</style>
 
 @endsection
