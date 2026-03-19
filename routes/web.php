@@ -10,13 +10,13 @@ use App\Http\Controllers\Ropa\UserActivityController;
 use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\RopaIssueController;
+use App\Http\Controllers\Admin\RiskBucketController;
 use App\Http\Controllers\RiskController;
 use App\Models\Comment;
 
 
 
 Route::get('/', function () {
-    
     return view('auth.login');
 });
 
@@ -29,154 +29,96 @@ Route::middleware('auth')->group(function () {
 
     // Admin Dashboard
     Route::get('/admin/dashboard', [DashboardController::class, 'admin'])
-    ->name('admin.dashboard')
-    ->middleware('auth', 'admin');
+        ->name('admin.dashboard')
+        ->middleware('auth', 'admin');
 
-    
     // Regular User Dashboard
     Route::get('/user/dashboard', [DashboardController::class, 'user'])
         ->name('user.dashboard');
 
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::patch('/profile/2fa-toggle', [ProfileController::class, 'toggleTwoFactor'])->name('2fa.toggle');
 
-
-Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-Route::patch('/profile/2fa-toggle', [ProfileController::class, 'toggleTwoFactor'])->name('2fa.toggle');
-
-
-    
-// Admin dashboard route
-Route::get('/admin', [DashboardController::class, 'admin'])->name('admin');
-Route::get('/account/edit', [DashboardController::class, 'edit'])->name('account.edit');
-Route::patch('/account', [DashboardController::class, 'update'])->name('account.update');
-
-
+    // Admin dashboard route
+    Route::get('/admin', [DashboardController::class, 'admin'])->name('admin');
+    Route::get('/account/edit', [DashboardController::class, 'edit'])->name('account.edit');
+    Route::patch('/account', [DashboardController::class, 'update'])->name('account.update');
 });
 
 
 
 // ROPA resource routes
-
-
-
 Route::middleware(['auth'])->group(function () {
     Route::delete('/ropa/bulk-delete', [RopaController::class, 'bulkDelete'])->name('ropa.bulk-delete');
     Route::resource('ropa', RopaController::class);
-
 });
 
 
-
-
-// ✅ 2FA Verification Routes (Available to All Authenticated Users)
+// 2FA Verification Routes
 Route::get('/2fa/verify', [TwoFactorController::class, 'show'])->name('2fa.verify');
 Route::post('/2fa/verify', [TwoFactorController::class, 'verify'])->name('2fa.verify.post');
 Route::post('/2fa/resend', [TwoFactorController::class, 'resend'])->name('2fa.resend');
 
 
 Route::get('/admin/ropas/test/export', function () {
-    // Make sure nothing was sent before output
-    if (ob_get_length()) {
-        ob_clean();
-    }
-
+    if (ob_get_length()) ob_clean();
     return \Spatie\SimpleExcel\SimpleExcelWriter::streamDownload('test.xlsx')
-        ->addRow([
-            'hello' => 'world',
-            'number' => 123,
-        ])
+        ->addRow(['hello' => 'world', 'number' => 123])
         ->close();
 });
-
-
 
 
 Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::get('/admin/ropas/{id}/export', [RopaController::class, 'export'])
-    ->name('admin.ropa.export');
+        ->name('admin.ropa.export');
 
-    // Admin dashboard ROPA list
     Route::get('/admin/ropas', [RopaController::class, 'adminIndex'])
         ->name('admin.ropa.index');
 
-    // View single ROPA details for review
     Route::get('/admin/ropas/{id}', [RopaController::class, 'show'])
         ->name('admin.ropa.show');
 
-    // Approve a ROPA record
     Route::post('/admin/ropas/{id}/approve', [RopaController::class, 'approve'])
         ->name('admin.ropa.approve');
 
-    // Reject a ROPA record
     Route::post('/admin/ropas/{id}/reject', [RopaController::class, 'reject'])
         ->name('admin.ropa.reject');
 
-
-    // User management page for admin
+    // User management
     Route::get('/admin/users', [DashboardController::class, 'adminUsersIndex'])->name('admin.users.index');
-    
-    // Edit user form
     Route::get('/admin/users/{id}/edit', [DashboardController::class, 'editUser'])->name('admin.users.edit');
-
-    // Create Users 
-
     Route::get('/admin/users/create', [DashboardController::class, 'createUser'])->name('admin.users.create');
-
-    // Store Users 
-
     Route::post('/admin/users/store', [DashboardController::class, 'store'])->name('admin.users.store');
-
-   // Update user details
     Route::put('/admin/users/{id}', [DashboardController::class, 'updateUser'])->name('admin.users.update');
+    Route::patch('/admin/users/{user}/toggle-status', [DashboardController::class, 'toggleStatus'])->name('admin.users.toggleStatus');
+    Route::get('/admin/users/{user}', [DashboardController::class, 'show'])->name('admin.users.show');
 
-   // Account Toggling 
-    
-    Route::patch('/admin/users/{user}/toggle-status', [DashboardController::class, 'toggleStatus'])
-     ->name('admin.users.toggleStatus');
-   // 
-     Route::get('/admin/users/{user}', [DashboardController::class, 'show'])
-    ->name('admin.users.show');
+    // Activity Routes
+    Route::get('/activities/export', [UserActivityController::class, 'export'])->name('activities.export');
+    Route::resource('activities', UserActivityController::class)->only(['index', 'show', 'destroy']);
 
+    Route::get('/analytics', [DashboardController::class, 'analytics'])->name('admin.analytics');
 
-  
+    Route::post('/ropas/{ropa}/status', [RopaController::class, 'updateStatus'])->name('ropas.updateStatus');
 
+    // ── Risk Buckets ──────────────────────────────────────────────
+    Route::get('/admin/risk-buckets', [RiskBucketController::class, 'index'])
+        ->name('admin.risk.buckets');
 
-
-  // Activity Route
-
-Route::get('/activities/export', [UserActivityController::class, 'export'])->name('activities.export');
-
-    // Resource routes for viewing, showing, and deleting activities
- Route::resource('activities', UserActivityController::class)->only(['index', 'show', 'destroy']);
-
-
- Route::get('/analytics', [DashboardController::class, 'analytics'])->name('admin.analytics');
-
- Route::post('/ropas/{ropa}/status', [App\Http\Controllers\RopaController::class, 'updateStatus'])->name('ropas.updateStatus');
-
-
-
-
+    Route::put('/admin/risk-buckets/{riskRegister}/level', [RiskBucketController::class, 'updateLevel'])
+        ->name('admin.risk.buckets.updateLevel');
+    // ─────────────────────────────────────────────────────────────
 });
 
 
 Route::get('/ropa/{id}/print', [RopaController::class, 'print'])->name('ropa.print');
- Route::get('{ropa}/review', [RopaController::class, 'review'])->name('ropa.review');
- Route::get('/{id}/review', [RopaController::class, 'show']); 
+Route::get('{ropa}/review', [RopaController::class, 'review'])->name('ropa.review');
+Route::get('/{id}/review', [RopaController::class, 'show']);
 
-// Handle sending the email (POST)
 Route::post('ropa/{id}/send-email', [RopaController::class, 'sendEmail'])->name('ropa.sendEmail.post');
-Route::patch('/profile/2fa-toggle', [ProfileController::class, 'toggleTwoFactor'])->name('2fa.toggle');
-Route::middleware(['auth'])->group(function () {
-   
-    
-    // Your other ROPA routes...
-   
-    // etc...
-});
-
 
 
 // Help Page
@@ -191,66 +133,29 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::delete('/reviews/{id}', [AdminReviewController::class, 'destroy'])->name('reviews.destroy');
     Route::get('/reviews/export/excel', [AdminReviewController::class, 'exportExcel'])->name('reviews.export.excel');
     Route::post('/reviews/bulk-action', [AdminReviewController::class, 'bulkAction'])->name('reviews.bulk.action');
-
-    // ✅ Add this for comments
-    Route::post('/reviews/{review}/comment', [AdminReviewController::class, 'addComment'])
-        ->name('reviews.addComment');
-
-Route::delete('/reviews/comments/{comment}', [AdminReviewController::class, 'deleteComment'])
-    ->name('reviews.deleteComment'); // NOT admin.reviews.deleteComment
-
-
+    Route::post('/reviews/{review}/comment', [AdminReviewController::class, 'addComment'])->name('reviews.addComment');
+    Route::delete('/reviews/comments/{comment}', [AdminReviewController::class, 'deleteComment'])->name('reviews.deleteComment');
 });
+
 
 Route::prefix('ticket')->name('ticket.')->middleware(['auth'])->group(function () {
-
-    // List all tickets for general user
     Route::get('/', [RopaIssueController::class, 'userIndex'])->name('index');
-
-    // Create form
     Route::get('/create', [RopaIssueController::class, 'create'])->name('create');
-
-    // Store ticket
     Route::post('/', [RopaIssueController::class, 'store'])->name('store');
-
-    // Show ticket
     Route::get('/{id}', [RopaIssueController::class, 'show'])->name('show');
-
-    // Edit ticket
     Route::get('/{id}/edit', [RopaIssueController::class, 'edit'])->name('edit');
-
-    // Update ticket
     Route::put('/{id}', [RopaIssueController::class, 'update'])->name('update');
-
-    // Delete ticket
     Route::delete('/{id}', [RopaIssueController::class, 'destroy'])->name('destroy');
 });
-
 
 
 Route::prefix('admin/tickets')->name('admin.tickets.')->middleware(['auth', 'admin'])->group(function () {
-
-    // List all tickets (pending + resolved)
     Route::get('/', [RopaIssueController::class, 'index'])->name('index');
-
-    // Show ticket (for modal content)
     Route::get('/{id}', [RopaIssueController::class, 'show'])->name('show');
-
-    // Edit ticket (for update page)
     Route::get('/{id}/edit', [RopaIssueController::class, 'edit'])->name('edit');
-
-    // Update ticket (for saving updates)
     Route::put('/{id}', [RopaIssueController::class, 'update'])->name('update');
-
-    // Delete ticket
     Route::delete('/{id}', [RopaIssueController::class, 'destroy'])->name('destroy');
-
-    // Close ticket (store comment and mark as resolved)
-    Route::post('/{id}/close', [RopaIssueController::class, 'close'])
-         ->name('close');
-
-         // Bulk Delete Route
-    
+    Route::post('/{id}/close', [RopaIssueController::class, 'close'])->name('close');
 });
 
 
@@ -258,57 +163,27 @@ Route::get('/admin/review-risk-dashboard', [App\Http\Controllers\Admin\ReviewCon
     ->name('admin.review.risk.dashboard');
 
 
-
-
-// Inside your routes (likely within auth middleware)
-
-
 Route::middleware(['auth'])->group(function () {
-    // Template download (must come before resource)
     Route::get('risk-register/template/download', [RiskController::class, 'downloadTemplate'])
         ->name('risk-register.download-template');
-    
-    // Bulk operations (must come before resource)
     Route::post('risk-register/import', [RiskController::class, 'import'])
         ->name('risk-register.import');
-    
     Route::post('risk-register/export-csv', [RiskController::class, 'exportCsv'])
         ->name('risk-register.export-csv');
-    
     Route::post('risk-register/export-pdf', [RiskController::class, 'exportPdf'])
         ->name('risk-register.export-pdf');
-    
     Route::delete('risk-register/bulk-delete', [RiskController::class, 'bulkDelete'])
         ->name('risk-register.bulk-delete');
-    
-    // Standard Resource Routes (must come last)
     Route::resource('risk-register', RiskController::class);
 });
 
 
-
 Route::middleware('auth')->group(function () {
-
-    // Logs index (Blade)
-    Route::get('/activities', [UserActivityController::class, 'index'])
-        ->name('activities.index');
-
-    // Single activity (JSON)
-    Route::get('/activities/show/{activity}', [UserActivityController::class, 'show'])
-        ->name('activities.view'); // 👈 CHANGED NAME
-
-    // User activities (JSON)
-    Route::get('/users/{userId}/activities', [UserActivityController::class, 'userActivities'])
-        ->name('users.activities');
-
-    // Model activities (JSON)
-    Route::get('/activities/model/{model}/{modelId}', [UserActivityController::class, 'modelActivities'])
-        ->name('activities.model');
-
-        // JSON endpoint for JS (used by your Blade page)
-Route::get('/activities/json', [UserActivityController::class, 'jsonIndex'])
-    ->name('activities.json');
-
+    Route::get('/activities', [UserActivityController::class, 'index'])->name('activities.index');
+    Route::get('/activities/show/{activity}', [UserActivityController::class, 'show'])->name('activities.view');
+    Route::get('/users/{userId}/activities', [UserActivityController::class, 'userActivities'])->name('users.activities');
+    Route::get('/activities/model/{model}/{modelId}', [UserActivityController::class, 'modelActivities'])->name('activities.model');
+    Route::get('/activities/json', [UserActivityController::class, 'jsonIndex'])->name('activities.json');
 });
 
 

@@ -1,680 +1,560 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
-@section('title', 'Risk | Register')
+@section('title', 'Admin | Risk Processing Activities')
 
 @section('content')
-<div class="container mx-auto px-4 py-6 max-w-7xl">
-    {{-- Header Section --}}
-    <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <h1 class="text-3xl font-bold text-orange-600 mb-2">ACRN Risk Register</h1>
-            <p class="text-gray-600">Monitor and manage organizational risks</p>
-        </div>
-        <div class="flex flex-col sm:flex-row gap-3">
-            <a href="{{ route('risk-register.download-template') }}" 
-               class="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors shadow-md hover:shadow-lg font-semibold">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                </svg>
-                Download Template
-            </a>
-            <button type="button" 
-                    onclick="document.getElementById('uploadModal').classList.remove('hidden')"
-                    class="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg font-semibold">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Upload Sheet
-            </button>
-            <a href="{{ route('risk-register.create') }}" 
-               class="inline-flex items-center gap-2 bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition-colors shadow-md hover:shadow-lg font-semibold">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Add New Risk
-            </a>
-        </div>
+
+@php
+    $allRisks   = \App\Models\EnterpriseRisk::with(['owner', 'ropa'])->whereNull('deleted_at')->get();
+    $low        = $allRisks->where('risk_level', 'low');
+    $medium     = $allRisks->where('risk_level', 'medium');
+    $high       = $allRisks->where('risk_level', 'high');
+    $critical   = $allRisks->where('risk_level', 'critical');
+
+    $buckets = [
+        'low'      => ['label' => 'Low Risk',      'color' => 'green',  'icon' => 'shield',         'items' => $low,      'score' => '1–5'],
+        'medium'   => ['label' => 'Medium Risk',   'color' => 'yellow', 'icon' => 'alert-circle',   'items' => $medium,   'score' => '6–11'],
+        'high'     => ['label' => 'High Risk',     'color' => 'orange', 'icon' => 'alert-triangle',  'items' => $high,     'score' => '12–19'],
+        'critical' => ['label' => 'Critical Risk', 'color' => 'red',    'icon' => 'zap',             'items' => $critical, 'score' => '20–25'],
+    ];
+
+    $colorMap = [
+        'green'  => ['bg' => '#f0fdf4', 'border' => '#86efac', 'badge' => '#16a34a', 'badgebg' => '#dcfce7', 'header' => '#15803d', 'pill' => '#bbf7d0'],
+        'yellow' => ['bg' => '#fefce8', 'border' => '#fde047', 'badge' => '#ca8a04', 'badgebg' => '#fef9c3', 'header' => '#a16207', 'pill' => '#fef08a'],
+        'orange' => ['bg' => '#fff7ed', 'border' => '#fdba74', 'badge' => '#ea580c', 'badgebg' => '#ffedd5', 'header' => '#c2410c', 'pill' => '#fed7aa'],
+        'red'    => ['bg' => '#fef2f2', 'border' => '#fca5a5', 'badge' => '#dc2626', 'badgebg' => '#fee2e2', 'header' => '#b91c1c', 'pill' => '#fecaca'],
+    ];
+@endphp
+
+<!-- ── PAGE HEADER ── -->
+<div class="hidden md:flex items-center justify-between mb-5 lg:mb-6">
+    <div>
+        <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 leading-tight">Risk Activities</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Drag and drop risks between buckets to reclassify them.</p>
     </div>
-
-    {{-- Success Alert --}}
-    @if(session('success'))
-        <div class="alert alert-success bg-green-50 border-l-4 border-green-500 text-green-800 px-4 py-3 rounded-lg mb-6 shadow-sm flex items-start gap-3" role="alert">
-            <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-            </svg>
-            <div class="flex-1">
-                <p class="font-semibold">Success!</p>
-                <p>{{ session('success') }}</p>
-            </div>
-        </div>
-    @endif
-
-    {{-- Error Alert --}}
-    @if(session('error'))
-        <div class="alert alert-error bg-red-50 border-l-4 border-red-500 text-red-800 px-4 py-3 rounded-lg mb-6 shadow-sm flex items-start gap-3" role="alert">
-            <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-            </svg>
-            <div class="flex-1">
-                <p class="font-semibold">Error</p>
-                <p>{{ session('error') }}</p>
-            </div>
-        </div>
-    @endif
-
-    {{-- Statistics Cards --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {{-- Total Risks --}}
-        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-semibold text-gray-600 mb-1">Total Risks</p>
-                    <p class="text-3xl font-bold text-gray-800">{{ $totalRisks ?? 0 }}</p>
-                </div>
-                <div class="bg-blue-100 p-3 rounded-lg">
-                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        {{-- High Risk --}}
-        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-semibold text-gray-600 mb-1">High Risk</p>
-                    <p class="text-3xl font-bold text-gray-800">{{ $highRisks ?? 0 }}</p>
-                </div>
-                <div class="bg-red-100 p-3 rounded-lg">
-                    <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        {{-- Medium Risk --}}
-        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-semibold text-gray-600 mb-1">Medium Risk</p>
-                    <p class="text-3xl font-bold text-gray-800">{{ $mediumRisks ?? 0 }}</p>
-                </div>
-                <div class="bg-yellow-100 p-3 rounded-lg">
-                    <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        {{-- Low Risk --}}
-        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-semibold text-gray-600 mb-1">Low Risk</p>
-                    <p class="text-3xl font-bold text-gray-800">{{ $lowRisks ?? 0 }}</p>
-                </div>
-                <div class="bg-green-100 p-3 rounded-lg">
-                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
+    <div class="flex items-center gap-2">
+        <a href="{{ route('risk-register.index') }}"
+           class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600
+                  text-gray-700 dark:text-gray-300 hover:bg-gray-50 font-semibold rounded-lg transition text-sm shadow-sm">
+            <i data-feather="list" class="w-4 h-4"></i>
+            Risk Register
+        </a>
+        <a href="{{ route('risk-register.create') }}"
+           class="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600
+                  text-white font-semibold rounded-lg transition text-sm shadow-sm">
+            <i data-feather="plus" class="w-4 h-4"></i>
+            New Risk
+        </a>
     </div>
+</div>
 
-    {{-- Filters & Search --}}
-    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
-        <form action="{{ route('risk-register.index') }}" method="GET" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {{-- Search --}}
-                <div class="md:col-span-2">
-                    <label for="search" class="block text-sm font-semibold text-gray-700 mb-2">
-                        Search Risks
-                    </label>
-                    <div class="relative">
-                        <input type="text" 
-                               id="search"
-                               name="search" 
-                               value="{{ request('search') }}"
-                               placeholder="Search by risk title, description..." 
-                               class="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
-                        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                    </div>
-                </div>
+<!-- Mobile header -->
+<div class="md:hidden mb-4">
+    <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">Risk Activities</h1>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Drag risks between buckets to reclassify.</p>
+</div>
 
-                {{-- Risk Level Filter --}}
-                <div>
-                    <label for="risk_level" class="block text-sm font-semibold text-gray-700 mb-2">
-                        Risk Level
-                    </label>
-                    <select name="risk_level" 
-                            id="risk_level"
-                            class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
-                        <option value="">All Levels</option>
-                        <option value="low" {{ request('risk_level') == 'low' ? 'selected' : '' }}>Low</option>
-                        <option value="medium" {{ request('risk_level') == 'medium' ? 'selected' : '' }}>Medium</option>
-                        <option value="high" {{ request('risk_level') == 'high' ? 'selected' : '' }}>High</option>
-                        <option value="critical" {{ request('risk_level') == 'critical' ? 'selected' : '' }}>Critical</option>
-                    </select>
-                </div>
-
-                {{-- Status Filter --}}
-                <div>
-                    <label for="status" class="block text-sm font-semibold text-gray-700 mb-2">
-                        Status
-                    </label>
-                    <select name="status" 
-                            id="status"
-                            class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
-                        <option value="">All Status</option>
-                        <option value="open" {{ request('status') == 'open' ? 'selected' : '' }}>Open</option>
-                        <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                        <option value="mitigated" {{ request('status') == 'mitigated' ? 'selected' : '' }}>Mitigated</option>
-                        <option value="closed" {{ request('status') == 'closed' ? 'selected' : '' }}>Closed</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="flex gap-3 flex-wrap">
-                <button type="submit" 
-                        class="inline-flex items-center gap-2 bg-orange-600 text-white px-6 py-2.5 rounded-lg hover:bg-orange-700 transition-colors font-medium">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-                    </svg>
-                    Apply Filters
-                </button>
-                <a href="{{ route('risk-register.index') }}" 
-                   class="inline-flex items-center gap-2 border-2 border-gray-300 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-50 transition-colors font-medium">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>
-                    Reset
-                </a>
-            </div>
-        </form>
+<!-- ── STAT CARDS ── -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+    <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border-l-4 border-green-500 shadow-sm flex items-center justify-between gap-2">
+        <div><p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Low</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ $low->count() }}</p></div>
+        <i data-feather="shield" class="w-7 h-7 text-green-500 flex-shrink-0"></i>
     </div>
-
-    {{-- Bulk Actions Bar --}}
-    <div id="bulkActionsBar" class="hidden bg-orange-50 border-l-4 border-orange-500 p-4 mb-6 rounded-lg shadow-md">
-        <div class="flex items-center justify-between gap-4 flex-wrap">
-            <div class="flex items-center gap-2">
-                <span class="text-sm font-semibold text-gray-700">
-                    <span id="selectedCount">0</span> risk(s) selected
-                </span>
-            </div>
-            <div class="flex items-center gap-3 flex-wrap">
-                <button type="button" 
-                        onclick="exportSelected()"
-                        class="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium text-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                    </svg>
-                    Export Selected (CSV)
-                </button>
-                <button type="button" 
-                        onclick="exportSelectedPDF()"
-                        class="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium text-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                    </svg>
-                    Export PDF
-                </button>
-                <button type="button" 
-                        onclick="deleteSelected()"
-                        class="inline-flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors font-medium text-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                    Delete Selected
-                </button>
-                <button type="button" 
-                        onclick="clearSelection()"
-                        class="inline-flex items-center gap-2 border-2 border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm">
-                    Clear
-                </button>
-            </div>
-        </div>
+    <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border-l-4 border-yellow-400 shadow-sm flex items-center justify-between gap-2">
+        <div><p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Medium</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ $medium->count() }}</p></div>
+        <i data-feather="alert-circle" class="w-7 h-7 text-yellow-500 flex-shrink-0"></i>
     </div>
+    <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border-l-4 border-orange-500 shadow-sm flex items-center justify-between gap-2">
+        <div><p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">High</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ $high->count() }}</p></div>
+        <i data-feather="alert-triangle" class="w-7 h-7 text-orange-500 flex-shrink-0"></i>
+    </div>
+    <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border-l-4 border-red-500 shadow-sm flex items-center justify-between gap-2">
+        <div><p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Critical</p>
+        <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ $critical->count() }}</p></div>
+        <i data-feather="zap" class="w-7 h-7 text-red-500 flex-shrink-0"></i>
+    </div>
+</div>
 
-    {{-- Risks Table --}}
-    <div class="bg-white rounded-xl shadow-md overflow-hidden">
-        @if(isset($risks) && $risks->count() > 0)
-            {{-- Pagination Info --}}
-            <div class="bg-gray-50 border-b border-gray-200 px-6 py-3 flex items-center justify-between">
-                <div class="text-sm text-gray-600">
-                    Showing <span class="font-semibold">{{ $risks->firstItem() }}</span> to 
-                    <span class="font-semibold">{{ $risks->lastItem() }}</span> of 
-                    <span class="font-semibold">{{ $risks->total() }}</span> risks
+<!-- ── PIPELINE PROGRESS BAR (like the screenshot) ── -->
+<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 mb-6">
+    <div class="flex items-center gap-2 mb-3">
+        <i data-feather="activity" class="w-4 h-4 text-orange-500"></i>
+        <span class="text-sm font-bold text-gray-700 dark:text-gray-200">Risk Distribution</span>
+        <span class="ml-auto text-xs text-gray-400">Total: {{ $allRisks->count() }} risks</span>
+    </div>
+    <div class="flex items-stretch gap-1 h-8 rounded-lg overflow-hidden">
+        @foreach(['low'=>[$low->count(),'#22c55e'],'medium'=>[$medium->count(),'#eab308'],'high'=>[$high->count(),'#f97316'],'critical'=>[$critical->count(),'#ef4444']] as $level => [$count, $color])
+            @if($count > 0)
+                @php $pct = $allRisks->count() > 0 ? round(($count / $allRisks->count()) * 100) : 0; @endphp
+                <div class="flex items-center justify-center text-white text-xs font-bold transition-all"
+                     style="width:{{ $pct }}%; background:{{ $color }}; min-width: {{ $count > 0 ? '32px' : '0' }}">
+                    {{ $count > 0 ? $count : '' }}
                 </div>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full" id="risksTable">
-                    <thead class="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-                        <tr>
-                            <th class="px-6 py-4 text-left text-sm font-semibold">
-                                <input type="checkbox" id="selectAll" class="rounded" onchange="toggleSelectAll(this)">
-                            </th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold">Risk ID</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold">Risk Title</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold">Department</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold">Risk Level</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold">Status</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold">Owner</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold">Last Updated</th>
-                            <th class="px-6 py-4 text-center text-sm font-semibold">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        @foreach($risks as $risk)
-                            <tr class="hover:bg-gray-50 transition-colors risk-row" data-id="{{ $risk->id }}">
-                                <td class="px-6 py-4">
-                                    <input type="checkbox" class="risk-checkbox rounded" value="{{ $risk->id }}" onchange="updateBulkActionsBar()">
-                                </td>
-                                <td class="px-6 py-4 text-sm font-medium text-gray-900">
-                                    {{ $risk->risk_id }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-sm font-semibold text-gray-900">{{ $risk->title }}</div>
-                                    <div class="text-xs text-gray-500 mt-1">{{ Str::limit($risk->description, 60) }}</div>
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-700">
-                                    {{ $risk->department }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    @php
-                                        $levelColors = [
-                                            'low' => 'bg-green-100 text-green-800 border-green-200',
-                                            'medium' => 'bg-yellow-100 text-yellow-800 border-yellow-200',
-                                            'high' => 'bg-orange-100 text-orange-800 border-orange-200',
-                                            'critical' => 'bg-red-100 text-red-800 border-red-200',
-                                        ];
-                                    @endphp
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border {{ $levelColors[$risk->risk_level] ?? 'bg-gray-100 text-gray-800 border-gray-200' }}">
-                                        <span class="w-2 h-2 rounded-full {{ $risk->risk_level == 'critical' ? 'bg-red-600' : ($risk->risk_level == 'high' ? 'bg-orange-600' : ($risk->risk_level == 'medium' ? 'bg-yellow-600' : 'bg-green-600')) }}"></span>
-                                        {{ ucfirst($risk->risk_level) }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    @php
-                                        $statusColors = [
-                                            'open' => 'bg-blue-100 text-blue-800',
-                                            'in_progress' => 'bg-purple-100 text-purple-800',
-                                            'mitigated' => 'bg-green-100 text-green-800',
-                                            'closed' => 'bg-gray-100 text-gray-800',
-                                        ];
-                                    @endphp
-                                    <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold {{ $statusColors[$risk->status] ?? 'bg-gray-100 text-gray-800' }}">
-                                        {{ ucfirst(str_replace('_', ' ', $risk->status)) }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-700">
-                                    {{ $risk->owner->name ?? 'N/A' }}
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-500">
-                                    {{ $risk->updated_at->format('M d, Y') }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center justify-center gap-2">
-                                        {{-- View --}}
-                                        <a href="{{ route('risk-register.show', ['risk_register' => $risk->id]) }}"
-                                           class="text-blue-600 hover:text-blue-800 transition-colors"
-                                           title="View">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                            </svg>
-                                        </a>
-
-                                        {{-- Edit --}}
-                                        <a href="{{ route('risk-register.edit', ['risk_register' => $risk->id]) }}"
-                                           class="text-orange-600 hover:text-orange-800 transition-colors" 
-                                           title="Edit">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                            </svg>
-                                        </a>
-
-                                        {{-- Delete --}}
-                                        <form action="{{ route('risk-register.destroy', ['risk_register' => $risk->id]) }}"
-                                              method="POST" class="inline"
-                                              onsubmit="return confirm('Are you sure you want to delete this risk?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" 
-                                                    class="text-red-600 hover:text-red-800 transition-colors" 
-                                                    title="Delete">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                                </svg>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-
-            {{-- Advanced Pagination --}}
-            <div class="px-6 py-4 border-t border-gray-200 bg-white">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    {{-- Pagination Links --}}
-                    <div class="flex flex-wrap gap-1">
-                        {{-- Previous Page Link --}}
-                        @if ($risks->onFirstPage())
-                            <span class="px-3 py-2 text-sm text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed">
-                                ← Previous
-                            </span>
-                        @else
-                            <a href="{{ $risks->previousPageUrl() }}" class="px-3 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                                ← Previous
-                            </a>
-                        @endif
-
-                        {{-- Pagination Elements --}}
-                        @foreach ($risks->getUrlRange(1, $risks->lastPage()) as $page => $url)
-                            @if ($page == $risks->currentPage())
-                                <span class="px-3 py-2 text-sm font-semibold text-white bg-orange-600 rounded-lg">
-                                    {{ $page }}
-                                </span>
-                            @else
-                                <a href="{{ $url }}" class="px-3 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                                    {{ $page }}
-                                </a>
-                            @endif
-                        @endforeach
-
-                        {{-- Next Page Link --}}
-                        @if ($risks->hasMorePages())
-                            <a href="{{ $risks->nextPageUrl() }}" class="px-3 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-                                Next →
-                            </a>
-                        @else
-                            <span class="px-3 py-2 text-sm text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed">
-                                Next →
-                            </span>
-                        @endif
-                    </div>
-
-                    {{-- Items Per Page Selector --}}
-                    <div class="flex items-center gap-2">
-                        <label for="perPage" class="text-sm font-medium text-gray-700">Items per page:</label>
-                        <select id="perPage" onchange="changeItemsPerPage(this.value)" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
-                            <option value="15" {{ request('per_page', 15) == 15 ? 'selected' : '' }}>15</option>
-                            <option value="25" {{ request('per_page', 15) == 25 ? 'selected' : '' }}>25</option>
-                            <option value="50" {{ request('per_page', 15) == 50 ? 'selected' : '' }}>50</option>
-                            <option value="100" {{ request('per_page', 15) == 100 ? 'selected' : '' }}>100</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        @else
-            <div class="text-center py-12">
-                <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                <h3 class="text-lg font-semibold text-gray-700 mb-2">No Risks Found</h3>
-                <p class="text-gray-500 mb-6">Get started by adding your first risk to the register.</p>
-                <a href="{{ route('risk-register.create') }}" 
-                   class="inline-flex items-center gap-2 bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition-colors font-semibold">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Add First Risk
-                </a>
-            </div>
+            @endif
+        @endforeach
+        @if($allRisks->count() === 0)
+            <div class="flex-1 bg-gray-100 flex items-center justify-center text-xs text-gray-400">No risks yet</div>
         @endif
     </div>
-</div>
-
-{{-- Upload Modal --}}
-<div id="uploadModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-lg p-8 max-w-md w-full">
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="text-2xl font-bold text-gray-800">Upload Risk Sheet</h2>
-            <button onclick="document.getElementById('uploadModal').classList.add('hidden')" 
-                    class="text-gray-500 hover:text-gray-700">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
-        </div>
-
-        <form action="{{ route('risk-register.import') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
-            @csrf
-            <div class="space-y-2">
-                <label for="riskFile" class="block text-sm font-semibold text-gray-700">
-                    Select Excel File <span class="text-red-500">*</span>
-                </label>
-                <div class="border-2 border-dashed border-orange-300 rounded-lg p-6 text-center hover:border-orange-500 transition-colors cursor-pointer"
-                     onclick="document.getElementById('riskFile').click()">
-                    <svg class="w-12 h-12 text-orange-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    <p class="text-sm font-semibold text-gray-700 mb-1">Click to upload or drag and drop</p>
-                    <p class="text-xs text-gray-500">Excel files (CSV, XLS, XLSX)</p>
-                </div>
-                <input type="file" 
-                       id="riskFile"
-                       name="file"
-                       accept=".csv,.xlsx,.xls"
-                       class="hidden"
-                       required>
-                <p id="fileName" class="text-sm text-gray-600 mt-2"></p>
-            </div>
-
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
-                <p class="text-sm text-blue-800">
-                    <strong>Note:</strong> File should contain columns: title, description, risk_category, likelihood, impact, department, etc.
-                </p>
-            </div>
-
-            <div class="flex gap-3">
-                <button type="submit" 
-                        class="flex-1 bg-orange-600 text-white px-4 py-2.5 rounded-lg hover:bg-orange-700 transition-colors font-semibold">
-                    Upload
-                </button>
-                <button type="button" 
-                        onclick="document.getElementById('uploadModal').classList.add('hidden')"
-                        class="flex-1 border-2 border-gray-300 text-gray-700 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors font-semibold">
-                    Cancel
-                </button>
-            </div>
-        </form>
+    <div class="flex items-center gap-4 mt-2">
+        @foreach(['Low'=>'#22c55e','Medium'=>'#eab308','High'=>'#f97316','Critical'=>'#ef4444'] as $label => $color)
+            <span class="flex items-center gap-1.5 text-xs text-gray-500">
+                <span class="w-2.5 h-2.5 rounded-full inline-block" style="background:{{ $color }}"></span>
+                {{ $label }}
+            </span>
+        @endforeach
     </div>
 </div>
 
+<!-- ── BULK ACTION BAR (appears when items selected) ── -->
+<div id="bulkBar"
+     class="hidden sticky top-2 z-30 mb-4 bg-white dark:bg-gray-800 border border-orange-300 rounded-xl shadow-lg px-4 py-3
+            flex items-center gap-3 flex-wrap">
+    <span class="text-sm font-bold text-orange-600">
+        <span id="selectedCount">0</span> risk(s) selected
+    </span>
+    <span class="text-gray-300">|</span>
+    <span class="text-xs text-gray-500 font-semibold">Move to:</span>
+    @foreach(['low'=>'Low','medium'=>'Medium','high'=>'High','critical'=>'Critical'] as $level => $label)
+        <button onclick="bulkMove('{{ $level }}')"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition border
+                       {{ $level === 'low' ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' :
+                          ($level === 'medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100' :
+                          ($level === 'high' ? 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100' :
+                          'bg-red-50 text-red-700 border-red-200 hover:bg-red-100')) }}">
+            {{ $label }}
+        </button>
+    @endforeach
+    <button onclick="clearSelection()"
+            class="ml-auto inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-500
+                   bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+        <i data-feather="x" class="w-3 h-3"></i> Clear
+    </button>
+</div>
+
+<!-- ── BUCKETS ── -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4" id="bucketsGrid">
+    @foreach($buckets as $level => $bucket)
+    @php $c = $colorMap[$bucket['color']]; @endphp
+    <div class="bucket-column flex flex-col rounded-xl border-2 overflow-hidden shadow-sm"
+         data-level="{{ $level }}"
+         style="border-color: {{ $c['border'] }}; background: {{ $c['bg'] }};">
+
+        <!-- Bucket header -->
+        <div class="px-4 py-3 flex items-center justify-between flex-shrink-0"
+             style="background: {{ $c['header'] }};">
+            <div class="flex items-center gap-2">
+                <i data-feather="{{ $bucket['icon'] }}" class="w-4 h-4 text-white flex-shrink-0"></i>
+                <div>
+                    <p class="text-sm font-bold text-white leading-tight">{{ $bucket['label'] }}</p>
+                    <p class="text-xs text-white/70">Score: {{ $bucket['score'] }}</p>
+                </div>
+            </div>
+            <span class="bucket-count text-white font-bold text-lg leading-none"
+                  id="count-{{ $level }}">{{ $bucket['items']->count() }}</span>
+        </div>
+
+        <!-- Drop zone -->
+        <div class="bucket-drop flex-1 p-2 space-y-2 min-h-[200px] transition-colors"
+             data-level="{{ $level }}"
+             ondragover="handleDragOver(event)"
+             ondragleave="handleDragLeave(event)"
+             ondrop="handleDrop(event, '{{ $level }}')">
+
+            @forelse($bucket['items'] as $risk)
+            <div class="risk-card group relative bg-white dark:bg-gray-800 rounded-lg border shadow-sm
+                        cursor-grab active:cursor-grabbing select-none transition-all
+                        hover:shadow-md hover:-translate-y-0.5"
+                 draggable="true"
+                 data-id="{{ $risk->id }}"
+                 data-level="{{ $level }}"
+                 ondragstart="handleDragStart(event)"
+                 ondragend="handleDragEnd(event)"
+                 style="border-color: {{ $c['border'] }};">
+
+                <!-- Checkbox + drag handle row -->
+                <div class="flex items-center gap-2 px-3 pt-2.5 pb-0">
+                    <input type="checkbox"
+                           class="risk-checkbox w-3.5 h-3.5 rounded accent-orange-500 flex-shrink-0 cursor-pointer"
+                           data-id="{{ $risk->id }}"
+                           data-level="{{ $level }}"
+                           onchange="handleCheckboxChange()"
+                           onclick="event.stopPropagation()">
+                    <span class="text-xs font-mono text-gray-400 flex-1 truncate">{{ $risk->risk_id }}</span>
+                    <i data-feather="more-vertical" class="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-400 flex-shrink-0"></i>
+                </div>
+
+                <!-- Card body -->
+                <div class="px-3 pb-3 pt-1.5">
+                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-tight mb-1.5 line-clamp-2">
+                        {{ $risk->title }}
+                    </p>
+
+                    @if($risk->department)
+                        <p class="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                            <i data-feather="briefcase" class="w-3 h-3 flex-shrink-0"></i>
+                            {{ $risk->department }}
+                        </p>
+                    @endif
+
+                    <div class="flex flex-wrap gap-1 mb-2">
+                        <!-- Status badge -->
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold"
+                              style="background: {{ $c['badgebg'] }}; color: {{ $c['badge'] }};">
+                            {{ ucfirst(str_replace('_', ' ', $risk->status ?? 'open')) }}
+                        </span>
+                        <!-- Score badge -->
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-600">
+                            Score: {{ $risk->inherent_risk_score ?? '—' }}
+                        </span>
+                    </div>
+
+                    <!-- Owner + actions -->
+                    <div class="flex items-center justify-between mt-1">
+                        @if($risk->owner)
+                            <div class="flex items-center gap-1.5">
+                                <div class="w-5 h-5 rounded-full bg-gradient-to-br from-orange-400 to-orange-600
+                                            flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                    {{ strtoupper(substr($risk->owner->name, 0, 1)) }}
+                                </div>
+                                <span class="text-xs text-gray-500 truncate max-w-[80px]">{{ $risk->owner->name }}</span>
+                            </div>
+                        @else
+                            <span class="text-xs text-gray-300">Unassigned</span>
+                        @endif
+                        <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <a href="{{ route('risk-register.show', $risk->id) }}"
+                               class="p-1 text-blue-500 hover:bg-blue-50 rounded transition"
+                               onclick="event.stopPropagation()" title="View">
+                                <i data-feather="eye" class="w-3.5 h-3.5"></i>
+                            </a>
+                            <a href="{{ route('risk-register.edit', $risk->id) }}"
+                               class="p-1 text-orange-500 hover:bg-orange-50 rounded transition"
+                               onclick="event.stopPropagation()" title="Edit">
+                                <i data-feather="edit-2" class="w-3.5 h-3.5"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @empty
+            <div class="empty-placeholder flex flex-col items-center justify-center py-10 text-center">
+                <i data-feather="{{ $bucket['icon'] }}" class="w-8 h-8 mb-2" style="color: {{ $c['border'] }}"></i>
+                <p class="text-xs font-semibold" style="color: {{ $c['badge'] }}">No {{ strtolower($bucket['label']) }} items</p>
+                <p class="text-xs text-gray-400 mt-0.5">Drop cards here</p>
+            </div>
+            @endforelse
+        </div>
+    </div>
+    @endforeach
+</div>
+
+<!-- ── PROCESSING ACTIVITIES TABLE ── -->
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mt-6">
+    <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-4 lg:px-6 py-3 lg:py-4">
+        <h2 class="text-base lg:text-lg font-bold text-white flex items-center gap-2">
+            <i data-feather="database" class="w-5 h-5 flex-shrink-0"></i>
+            Processing Activities
+        </h2>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
+                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Organisation</th>
+                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider hidden md:table-cell">Department</th>
+                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Processing Activities</th>
+                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider hidden lg:table-cell">Risk Level</th>
+                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                    <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                @forelse(\App\Models\Ropa::with('enterpriseRisks')->latest()->take(20)->get() as $ropa)
+                @php
+                    $rl = $ropa->risk_level;
+                    $rlStyle = match($rl) {
+                        'critical' => ['bg-red-100 text-red-700 border-red-200',    'zap'],
+                        'high'     => ['bg-orange-100 text-orange-700 border-orange-200', 'alert-triangle'],
+                        'medium'   => ['bg-yellow-100 text-yellow-700 border-yellow-200', 'alert-circle'],
+                        'low'      => ['bg-green-100 text-green-700 border-green-200',   'shield'],
+                        default    => ['bg-gray-100 text-gray-500 border-gray-200',      'minus'],
+                    };
+                    $sc = match($ropa->status) {
+                        'Reviewed','Approved' => 'bg-green-100 text-green-700 border-green-200',
+                        'Rejected'            => 'bg-red-100 text-red-700 border-red-200',
+                        default               => 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                    };
+                    $activities = is_array($ropa->processes) ? implode(', ', $ropa->processes) : ($ropa->processes ?? '—');
+                @endphp
+                <tr class="hover:bg-orange-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg
+                                        flex items-center justify-center text-white text-xs font-bold">
+                                <i data-feather="briefcase" class="w-3.5 h-3.5"></i>
+                            </div>
+                            <span class="font-semibold text-xs text-gray-900 dark:text-gray-100">{{ $ropa->organisation_name ?? 'N/A' }}</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 hidden md:table-cell">
+                        <span class="text-xs text-gray-600 dark:text-gray-300">{{ $ropa->department ?? '—' }}</span>
+                    </td>
+                    <td class="px-4 py-3 max-w-xs">
+                        <span class="text-xs text-gray-700 dark:text-gray-300 line-clamp-2" title="{{ $activities }}">{{ $activities }}</span>
+                    </td>
+                    <td class="px-4 py-3 hidden lg:table-cell">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border {{ $rlStyle[0] }}">
+                            <i data-feather="{{ $rlStyle[1] }}" class="w-3 h-3"></i>
+                            {{ ucfirst($rl) }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold border {{ $sc }}">
+                            {{ $ropa->status ?? 'Pending' }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <div class="flex items-center justify-center gap-1">
+                            <a href="{{ route('ropa.show', $ropa->id) }}"
+                               class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="View">
+                                <i data-feather="eye" class="w-4 h-4"></i>
+                            </a>
+                            <a href="{{ route('ropa.edit', $ropa->id) }}"
+                               class="p-1.5 text-orange-500 hover:bg-orange-50 rounded-lg transition" title="Edit">
+                                <i data-feather="edit-2" class="w-4 h-4"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="6" class="px-4 py-16 text-center">
+                        <i data-feather="inbox" class="w-10 h-10 text-gray-300 mx-auto mb-2"></i>
+                        <p class="text-sm text-gray-400">No processing activities found</p>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    <div class="px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between">
+        <p class="text-xs text-gray-500">Showing latest 20 ROPA records</p>
+        <a href="{{ route('admin.dashboard') }}" class="text-xs font-semibold text-orange-500 hover:underline">View all →</a>
+    </div>
+</div>
+
+<style>
+    .bucket-drop.drag-over {
+        background: rgba(249, 115, 22, 0.08) !important;
+        outline: 2px dashed #f97316;
+        outline-offset: -2px;
+    }
+    .risk-card.dragging { opacity: 0.4; transform: scale(0.97); }
+    .risk-card.selected { outline: 2px solid #f97316; outline-offset: 1px; }
+    .line-clamp-2 { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+</style>
+
 <script>
-// File upload handler
-document.getElementById('riskFile')?.addEventListener('change', function(e) {
-    const fileName = e.target.files[0]?.name || '';
-    document.getElementById('fileName').textContent = fileName ? `Selected: ${fileName}` : '';
-});
+    feather.replace();
 
-// Drag and drop
-const dropZone = document.querySelector('[onclick="document.getElementById(\'riskFile\').click()"]');
-if (dropZone) {
-    dropZone.addEventListener('dragover', (e) => {
+    var CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    // ── Drag state ──────────────────────────────────────────────
+    var draggedId    = null;
+    var draggedLevel = null;
+    var draggedEl    = null;
+
+    function handleDragStart(e) {
+        draggedId    = e.currentTarget.dataset.id;
+        draggedLevel = e.currentTarget.dataset.level;
+        draggedEl    = e.currentTarget;
+        e.currentTarget.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', draggedId);
+    }
+
+    function handleDragEnd(e) {
+        e.currentTarget.classList.remove('dragging');
+        document.querySelectorAll('.bucket-drop').forEach(function(z) { z.classList.remove('drag-over'); });
+    }
+
+    function handleDragOver(e) {
         e.preventDefault();
-        dropZone.classList.add('border-orange-500', 'bg-orange-50');
-    });
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('border-orange-500', 'bg-orange-50');
-    });
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('border-orange-500', 'bg-orange-50');
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            document.getElementById('riskFile').files = files;
-            document.getElementById('fileName').textContent = `Selected: ${files[0].name}`;
+        e.dataTransfer.dropEffect = 'move';
+        e.currentTarget.classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+        // Only remove if leaving the drop zone itself, not a child
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+            e.currentTarget.classList.remove('drag-over');
         }
-    });
-}
-
-// Change items per page
-function changeItemsPerPage(value) {
-    const url = new URL(window.location);
-    url.searchParams.set('per_page', value);
-    window.location = url.toString();
-}
-
-// Bulk selection functions
-function toggleSelectAll(checkbox) {
-    const checkboxes = document.querySelectorAll('.risk-checkbox');
-    checkboxes.forEach(cb => {
-        cb.checked = checkbox.checked;
-    });
-    updateBulkActionsBar();
-}
-
-function updateBulkActionsBar() {
-    const selectedCheckboxes = document.querySelectorAll('.risk-checkbox:checked');
-    const bulkActionsBar = document.getElementById('bulkActionsBar');
-    const selectedCount = document.getElementById('selectedCount');
-    
-    if (selectedCheckboxes.length > 0) {
-        bulkActionsBar.classList.remove('hidden');
-        selectedCount.textContent = selectedCheckboxes.length;
-    } else {
-        bulkActionsBar.classList.add('hidden');
-        document.getElementById('selectAll').checked = false;
     }
-}
 
-function clearSelection() {
-    document.querySelectorAll('.risk-checkbox').forEach(cb => cb.checked = false);
-    document.getElementById('selectAll').checked = false;
-    updateBulkActionsBar();
-}
+    function handleDrop(e, newLevel) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('drag-over');
 
-function getSelectedIds() {
-    return Array.from(document.querySelectorAll('.risk-checkbox:checked')).map(cb => cb.value);
-}
+        if (!draggedId || newLevel === draggedLevel) return;
 
-function exportSelected() {
-    const selectedIds = getSelectedIds();
-    if (selectedIds.length === 0) {
-        alert('Please select at least one risk to export');
-        return;
+        moveRisk(draggedId, newLevel, function() {
+            // Move the card DOM element to the new bucket
+            var drop = document.querySelector('.bucket-drop[data-level="' + newLevel + '"]');
+            if (drop && draggedEl) {
+                // Remove empty placeholder if present
+                var placeholder = drop.querySelector('.empty-placeholder');
+                if (placeholder) placeholder.remove();
+
+                draggedEl.dataset.level = newLevel;
+                drop.appendChild(draggedEl);
+
+                // Add empty placeholder to old bucket if now empty
+                var oldDrop = document.querySelector('.bucket-drop[data-level="' + draggedLevel + '"]');
+                if (oldDrop && oldDrop.querySelectorAll('.risk-card').length === 0) {
+                    addEmptyPlaceholder(oldDrop, draggedLevel);
+                }
+
+                draggedLevel = newLevel;
+                updateCounts();
+                feather.replace();
+            }
+        });
     }
-    
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '{{ route("risk-register.export-csv") }}';
-    
-    const csrfInput = document.createElement('input');
-    csrfInput.type = 'hidden';
-    csrfInput.name = '_token';
-    csrfInput.value = '{{ csrf_token() }}';
-    form.appendChild(csrfInput);
-    
-    selectedIds.forEach(id => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'ids[]';
-        input.value = id;
-        form.appendChild(input);
-    });
-    
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-}
 
-function exportSelectedPDF() {
-    const selectedIds = getSelectedIds();
-    if (selectedIds.length === 0) {
-        alert('Please select at least one risk to export');
-        return;
-    }
-    
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '{{ route("risk-register.export-pdf") }}';
-    
-    const csrfInput = document.createElement('input');
-    csrfInput.type = 'hidden';
-    csrfInput.name = '_token';
-    csrfInput.value = '{{ csrf_token() }}';
-    form.appendChild(csrfInput);
-    
-    selectedIds.forEach(id => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'ids[]';
-        input.value = id;
-        form.appendChild(input);
-    });
-    
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-}
+    // ── Multi-select ─────────────────────────────────────────────
+    var selectedIds = new Set();
 
-function deleteSelected() {
-    const selectedIds = getSelectedIds();
-    if (selectedIds.length === 0) {
-        alert('Please select at least one risk to delete');
-        return;
+    function handleCheckboxChange() {
+        selectedIds.clear();
+        document.querySelectorAll('.risk-checkbox:checked').forEach(function(cb) {
+            selectedIds.add(cb.dataset.id);
+        });
+        // Highlight selected cards
+        document.querySelectorAll('.risk-card').forEach(function(card) {
+            if (selectedIds.has(card.dataset.id)) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+        });
+        // Show/hide bulk bar
+        var bar = document.getElementById('bulkBar');
+        var countEl = document.getElementById('selectedCount');
+        if (selectedIds.size > 0) {
+            bar.classList.remove('hidden');
+            bar.classList.add('flex');
+            countEl.textContent = selectedIds.size;
+        } else {
+            bar.classList.add('hidden');
+            bar.classList.remove('flex');
+        }
     }
-    
-    if (!confirm(`Are you sure you want to delete ${selectedIds.length} selected risk(s)?`)) {
-        return;
-    }
-    
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '{{ route("risk-register.bulk-delete") }}';
-    
-    const csrfInput = document.createElement('input');
-    csrfInput.type = 'hidden';
-    csrfInput.name = '_token';
-    csrfInput.value = '{{ csrf_token() }}';
-    form.appendChild(csrfInput);
-    
-    const methodInput = document.createElement('input');
-    methodInput.type = 'hidden';
-    methodInput.name = '_method';
-    methodInput.value = 'DELETE';
-    form.appendChild(methodInput);
-    
-    selectedIds.forEach(id => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'ids[]';
-        input.value = id;
-        form.appendChild(input);
-    });
-    
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-}
 
-// Auto-dismiss alerts
-document.addEventListener('DOMContentLoaded', () => {
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            alert.style.transition = "opacity 0.5s ease-out, max-height 0.5s ease-out, margin 0.5s ease-out";
-            alert.style.opacity = 0;
-            alert.style.maxHeight = 0;
-            alert.style.marginBottom = 0;
-            setTimeout(() => alert.remove(), 500);
-        }, 10000);
-    });
-});
+    function clearSelection() {
+        document.querySelectorAll('.risk-checkbox:checked').forEach(function(cb) { cb.checked = false; });
+        document.querySelectorAll('.risk-card.selected').forEach(function(c) { c.classList.remove('selected'); });
+        selectedIds.clear();
+        document.getElementById('bulkBar').classList.add('hidden');
+        document.getElementById('bulkBar').classList.remove('flex');
+    }
+
+    function bulkMove(newLevel) {
+        if (selectedIds.size === 0) return;
+
+        var ids = Array.from(selectedIds);
+        var moved = 0;
+
+        ids.forEach(function(id) {
+            var card = document.querySelector('.risk-card[data-id="' + id + '"]');
+            if (!card || card.dataset.level === newLevel) { moved++; checkDone(); return; }
+
+            moveRisk(id, newLevel, function() {
+                var oldLevel  = card.dataset.level;
+                var drop      = document.querySelector('.bucket-drop[data-level="' + newLevel + '"]');
+                var oldDrop   = document.querySelector('.bucket-drop[data-level="' + oldLevel + '"]');
+
+                if (drop) {
+                    var placeholder = drop.querySelector('.empty-placeholder');
+                    if (placeholder) placeholder.remove();
+                    card.dataset.level = newLevel;
+                    var cb = card.querySelector('.risk-checkbox');
+                    if (cb) cb.dataset.level = newLevel;
+                    drop.appendChild(card);
+                }
+
+                if (oldDrop && oldDrop.querySelectorAll('.risk-card').length === 0) {
+                    addEmptyPlaceholder(oldDrop, oldLevel);
+                }
+
+                moved++;
+                checkDone();
+            });
+        });
+
+        function checkDone() {
+            if (moved === ids.length) {
+                updateCounts();
+                clearSelection();
+                feather.replace();
+            }
+        }
+    }
+
+    // ── API call ─────────────────────────────────────────────────
+    function moveRisk(id, newLevel, callback) {
+        fetch('/risk-register/' + id, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': CSRF,
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ risk_level: newLevel, _partial: true })
+        })
+        .then(function(res) {
+            if (!res.ok) throw new Error('Server error: ' + res.status);
+            return res.json();
+        })
+        .then(function() { if (callback) callback(); })
+        .catch(function(err) {
+            console.error('Move failed:', err);
+            showToast('Failed to move risk. Please try again.', 'error');
+        });
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────
+    function updateCounts() {
+        ['low','medium','high','critical'].forEach(function(level) {
+            var drop  = document.querySelector('.bucket-drop[data-level="' + level + '"]');
+            var count = drop ? drop.querySelectorAll('.risk-card').length : 0;
+            var el    = document.getElementById('count-' + level);
+            if (el) el.textContent = count;
+        });
+    }
+
+    var emptyIcons = { low:'shield', medium:'alert-circle', high:'alert-triangle', critical:'zap' };
+    var emptyLabels = { low:'No low risk items', medium:'No medium risk items', high:'No high risk items', critical:'No critical risk items' };
+
+    function addEmptyPlaceholder(drop, level) {
+        var div = document.createElement('div');
+        div.className = 'empty-placeholder flex flex-col items-center justify-center py-10 text-center';
+        div.innerHTML = '<p class="text-xs font-semibold text-gray-400">' + (emptyLabels[level] || 'Empty') + '</p>'
+                      + '<p class="text-xs text-gray-300 mt-0.5">Drop cards here</p>';
+        drop.appendChild(div);
+    }
+
+    function showToast(msg, type) {
+        var t = document.createElement('div');
+        t.className = 'fixed bottom-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-sm font-semibold text-white transition-all '
+                    + (type === 'error' ? 'bg-red-500' : 'bg-green-500');
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(function() { t.remove(); }, 3500);
+    }
 </script>
+
 @endsection
