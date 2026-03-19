@@ -180,13 +180,19 @@
                                 </td>
                                 <td class="px-4 py-3 max-w-xs">
                                     @php
-                                        $processes = is_array($ropa->processes) ? $ropa->processes : [];
+                                        $raw = $ropa->getRawOriginal('processes');
+                                        $decoded = json_decode($raw, true);
+                                        // Handle double-encoded JSON (string inside string)
+                                        if (is_string($decoded)) {
+                                            $decoded = json_decode($decoded, true);
+                                        }
+                                        $processes = is_array($decoded) ? $decoded : [];
                                     @endphp
                                     @if (!empty($processes))
                                         <div class="flex flex-wrap gap-1">
                                             @foreach ($processes as $process)
                                                 <span class="inline-block bg-orange-100 text-orange-800 text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap">
-                                                    {{ $process }}
+                                                    {{ is_array($process) ? ($process['name'] ?? $process['title'] ?? json_encode($process)) : $process }}
                                                 </span>
                                             @endforeach
                                         </div>
