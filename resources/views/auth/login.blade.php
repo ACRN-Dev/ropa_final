@@ -151,7 +151,7 @@
             <div class="form-group">
                 <label for="email">Email address</label>
                 <input type="email" name="email" id="email" class="form-control"
-                    value="{{ old('email') }}" placeholder="you@example.com"
+                    value="{{ old('email') }}" placeholder=""
                     required autofocus autocomplete="username">
                 @error('email')<p class="field-error">{{ $message }}</p>@enderror
             </div>
@@ -159,7 +159,7 @@
             <div class="form-group">
                 <label for="password">Password</label>
                 <input type="password" name="password" id="password" class="form-control"
-                    placeholder="••••••••"
+                    placeholder=""
                     required autocomplete="current-password">
                 @error('password')<p class="field-error">{{ $message }}</p>@enderror
             </div>
