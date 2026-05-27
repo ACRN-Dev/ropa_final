@@ -66,23 +66,12 @@
                     </a>
                 </li>
 
-                 <li>
-                    <a href="{{ route('risk-register.index') }}"
-                       class="flex items-center py-2.5 px-3 rounded-lg text-sm font-medium
-                              hover:bg-white/10 transition-colors
-                              {{ request()->routeIs('risk-register.*') ? 'bg-white/15 text-white' : 'text-white/80' }}">
-                        <i data-feather="shield" class="w-4 h-4 mr-3 flex-shrink-0"></i>
-                        Risk Register
-                    </a>
-                </li>
 
 
 
 
                 <!-- ── ROPA ── -->
-                <li class="pt-3 pb-1">
-                    <p class="text-white/30 text-xs font-semibold uppercase tracking-widest px-3">ROPA</p>
-                </li>
+                <li class="pt-1"></li>
 
                
 
@@ -91,9 +80,7 @@
                
 
                 <!-- ── MANAGEMENT ── -->
-                <li class="pt-3 pb-1">
-                    <p class="text-white/30 text-xs font-semibold uppercase tracking-widest px-3">Management</p>
-                </li>
+                <li class="pt-1"></li>
 
                 <li>
                     <a href="{{ route('admin.users.index') }}"
@@ -105,15 +92,6 @@
                     </a>
                 </li>
 
-                                <li>
-                    <a href="{{ route('admin.analytics') }}"
-                       class="flex items-center py-2.5 px-3 rounded-lg text-sm font-medium
-                              hover:bg-white/10 transition-colors
-                              {{ request()->routeIs('admin.analytics') ? 'bg-white/15 text-white' : 'text-white/80' }}">
-                        <i data-feather="bar-chart-2" class="w-4 h-4 mr-3 flex-shrink-0"></i>
-                        Analytics
-                    </a>
-                </li>
 
                 
                

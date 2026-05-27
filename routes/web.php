@@ -78,7 +78,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/ropas', [RopaController::class, 'adminIndex'])
         ->name('admin.ropa.index');
 
-    Route::get('/admin/ropas/{id}', [RopaController::class, 'show'])
+    Route::get('/admin/ropas/{ropa}', [RopaController::class, 'show'])
         ->name('admin.ropa.show');
 
     Route::post('/admin/ropas/{id}/approve', [RopaController::class, 'approve'])
@@ -117,6 +117,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 Route::get('/ropa/{id}/print', [RopaController::class, 'print'])->name('ropa.print');
 Route::get('{ropa}/review', [RopaController::class, 'review'])->name('ropa.review');
 Route::get('/{id}/review', [RopaController::class, 'show']);
+Route::post('/ropa/{ropa}/move-risks', [RopaController::class, 'moveRisks']);
 
 Route::post('ropa/{id}/send-email', [RopaController::class, 'sendEmail'])->name('ropa.sendEmail.post');
 

@@ -40,6 +40,54 @@ class RopaController extends Controller
         return view('ropa.index', compact('ropas'));
     }
 
+    public function adminIndex(Request $request)
+    {
+        $query = Ropa::with('user')->latest();
+
+        if ($request->filled('search')) {
+            $search = $request->string('search')->toString();
+
+            $query->where(function ($q) use ($search) {
+                $q->where('organisation_name', 'like', "%{$search}%")
+                    ->orWhere('department', 'like', "%{$search}%")
+                    ->orWhere('status', 'like', "%{$search}%")
+                    ->orWhere('processes', 'like', "%{$search}%")
+                    ->orWhere('lawful_basis', 'like', "%{$search}%");
+            });
+        }
+
+        $ropas = $query->paginate(15)->withQueryString();
+
+        return view('admindashboard.management.index', compact('ropas'));
+    }
+
+    public function approve($id)
+    {
+        $ropa = Ropa::findOrFail($id);
+        $ropa->update(['status' => Ropa::STATUS_REVIEWED]);
+
+        return back()->with('success', 'ROPA marked as reviewed.');
+    }
+
+    public function reject($id)
+    {
+        $ropa = Ropa::findOrFail($id);
+        $ropa->update(['status' => Ropa::STATUS_PENDING]);
+
+        return back()->with('success', 'ROPA returned to pending.');
+    }
+
+    public function updateStatus(Request $request, Ropa $ropa)
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'in:' . implode(',', [Ropa::STATUS_PENDING, Ropa::STATUS_REVIEWED])],
+        ]);
+
+        $ropa->update($validated);
+
+        return back()->with('success', 'ROPA status updated.');
+    }
+
     public function create(Request $request){
          $query = Ropa::with('user');
         $ropas = $query->latest()->paginate(15);
@@ -253,13 +301,25 @@ public function bulkDelete(Request $request)
      */
     public function update(Request $request, Ropa $ropa)
     {
-        $validated = $this->validateRopa($request);
-        $ropa->update($validated);
+        try {
+            $validated = $this->validateRopa($request);
+            $ropa->update($validated);
 
-        return response()->json([
-            'message' => 'ROPA record updated successfully',
-            'data' => $ropa
-        ]);
+            return redirect()
+                ->route('admin.ropa.show', $ropa->id)
+                ->with('success', 'ROPA record updated successfully.');
+        } catch (\Throwable $e) {
+            Log::error('ROPA UPDATE FAILED', [
+                'ropa_id' => $ropa->id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Unable to save changes right now. Please try again.');
+        }
     }
 
     /**
@@ -284,6 +344,7 @@ public function bulkDelete(Request $request)
             'other_organisation_name' => 'nullable|string|max:255',
             'department' => 'nullable|string|max:255',
             'other_department' => 'nullable|string|max:255',
+            'date_submitted' => 'nullable|date',
             'processes' => 'nullable|array',
             'data_sources' => 'nullable|array',
             'data_sources_other' => 'nullable|array',
@@ -309,6 +370,7 @@ public function bulkDelete(Request $request)
             'organisational_measures' => 'nullable|array',
             'lawful_basis' => 'nullable|array',
             'risk_report' => 'nullable|array',
+            'risk_level' => 'nullable|string|in:low,medium,high,critical',
             'status' => 'nullable|string|in:Pending,Reviewed'
         ]);
     }
@@ -510,4 +572,22 @@ public function bulkDelete(Request $request)
         $ropa->update(['archived' => false]);
         return back()->with('success', 'ROPA restored successfully');
     }
+
+
+    
+public function moveRisks(Request $request, Ropa $ropa)
+{
+    $request->validate([
+        'risk_level' => ['required', 'in:' . implode(',', Ropa::RISK_LEVELS)],
+    ]);
+
+    $ropa->update(['risk_level' => $request->risk_level]);
+
+    return response()->json([
+        'success'    => true,
+        'risk_level' => $ropa->risk_level,
+    ]);
+}
+
+
 }

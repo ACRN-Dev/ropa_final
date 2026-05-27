@@ -35,13 +35,7 @@ return new class extends Migration
         });
 
         // Add index ONLY if it doesn't already exist
-        $indexExists = DB::table('information_schema.statistics')
-            ->where('table_schema', DB::getDatabaseName())
-            ->where('table_name', 'ropa_issues')
-            ->where('index_name', 'ropa_issues_risk_level_index')
-            ->exists();
-
-        if (!$indexExists) {
+        if (! $this->indexExists('ropa_issues', 'ropa_issues_risk_level_index')) {
             Schema::table('ropa_issues', function (Blueprint $table) {
                 $table->index('risk_level', 'ropa_issues_risk_level_index');
             });
@@ -72,6 +66,32 @@ return new class extends Migration
         });
 
         // Drop the index if it exists
-        DB::statement('DROP INDEX IF EXISTS ropa_issues_risk_level_index ON ropa_issues');
+        if ($this->indexExists('ropa_issues', 'ropa_issues_risk_level_index')) {
+            if (DB::getDriverName() === 'sqlite') {
+                DB::statement('DROP INDEX ropa_issues_risk_level_index');
+            } else {
+                Schema::table('ropa_issues', function (Blueprint $table) {
+                    $table->dropIndex('ropa_issues_risk_level_index');
+                });
+            }
+        }
+    }
+
+    private function indexExists(string $table, string $index): bool
+    {
+        if (DB::getDriverName() === 'sqlite') {
+            return collect(DB::select("PRAGMA index_list('{$table}')"))
+                ->contains(fn ($row) => $row->name === $index);
+        }
+
+        if (DB::getDriverName() === 'mysql') {
+            return DB::table('information_schema.statistics')
+                ->where('table_schema', DB::getDatabaseName())
+                ->where('table_name', $table)
+                ->where('index_name', $index)
+                ->exists();
+        }
+
+        return false;
     }
 };

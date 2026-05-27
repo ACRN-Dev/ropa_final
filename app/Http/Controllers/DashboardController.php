@@ -26,39 +26,79 @@ public function admin()
         $user = auth()->user();
 
         $allRopas = Ropa::with(['enterpriseRisks', 'user'])
-    ->where('user_id', $user->id)
-    ->latest()
-    ->paginate(15);
+            ->latest('date_submitted')
+            ->latest('created_at')
+            ->get();
 
+        $totalRecords = $allRopas->count();
+        $pendingCount = $allRopas->where('status', Ropa::STATUS_PENDING)->count();
+        $tasksCompleted = $allRopas->whereIn('status', [Ropa::STATUS_REVIEWED, 'Approved'])->count();
 
-        /* -------------------------------
-         | Risk distribution (ADMIN)
-         ------------------------------- */
-        $risks = EnterpriseRisk::all();
-
-        $critical = $risks->where('risk_level', 'critical')->count();
-        $high     = $risks->where('risk_level', 'high')->count();
-        $medium   = $risks->where('risk_level', 'medium')->count();
-        $low      = $risks->where('risk_level', 'low')->count();
-
-        $total = max($critical + $high + $medium + $low, 1);
-
-        $criticalRisk = round(($critical / $total) * 100, 1);
-        $highRisk     = round(($high / $total) * 100, 1);
-        $mediumRisk   = round(($medium / $total) * 100, 1);
-        $lowRisk      = round(($low / $total) * 100, 1);
-
-        /* -------------------------------
-         | Admin ROPA stats
-         ------------------------------- */
-        $overdueReviews = Ropa::where('status', 'Pending')
-            ->whereDate('created_at', '<', now()->subDays(30))
+        $overdueReviews = Ropa::where('status', Ropa::STATUS_PENDING)
+            ->whereDate('date_submitted', '<', now()->subDays(30))
             ->count();
 
-        $tasksCompleted = Ropa::whereIn('status', ['Reviewed', 'Approved'])->count();
+        $critical = $allRopas->where('risk_level', 'critical')->count();
+        $high     = $allRopas->where('risk_level', 'high')->count();
+        $medium   = $allRopas->where('risk_level', 'medium')->count();
+        $low      = $allRopas->where('risk_level', 'low')->count();
+
+        $riskTotal = max($critical + $high + $medium + $low, 1);
+
+        $criticalRisk = round(($critical / $riskTotal) * 100, 1);
+        $highRisk     = round(($high / $riskTotal) * 100, 1);
+        $mediumRisk   = round(($medium / $riskTotal) * 100, 1);
+        $lowRisk      = round(($low / $riskTotal) * 100, 1);
+
+        $departments = [
+            'Human Resources'          => ['icon' => 'users',       'color' => 'green'],
+            'Community Engagement'     => ['icon' => 'heart',       'color' => 'pink'],
+            'IDRL'                     => ['icon' => 'activity',    'color' => 'teal'],
+            'Finance & Admin'          => ['icon' => 'dollar-sign', 'color' => 'yellow'],
+            'Clinical Operations'      => ['icon' => 'clipboard',   'color' => 'orange'],
+            'Information Technology'   => ['icon' => 'monitor',     'color' => 'blue'],
+            'Project Management'       => ['icon' => 'briefcase',   'color' => 'red'],
+            'Legal & Compliance'       => ['icon' => 'book',        'color' => 'gray'],
+            'Comms & Medical Writing'  => ['icon' => 'edit-3',      'color' => 'indigo'],
+            'Pharmacy'                 => ['icon' => 'package',     'color' => 'cyan'],
+            'Data & Biostatistics'     => ['icon' => 'bar-chart-2', 'color' => 'purple'],
+        ];
+
+        foreach ($allRopas->pluck('department')->filter()->unique()->sort()->values() as $department) {
+            $departments[$department] ??= ['icon' => 'folder', 'color' => 'gray'];
+        }
+
+        $colorMap = [
+            'indigo' => ['bg'=>'bg-indigo-50', 'icon'=>'text-indigo-500', 'badge'=>'bg-indigo-100 text-indigo-700', 'bar'=>'bg-indigo-500'],
+            'blue'   => ['bg'=>'bg-blue-50',   'icon'=>'text-blue-500',   'badge'=>'bg-blue-100 text-blue-700',     'bar'=>'bg-blue-500'],
+            'green'  => ['bg'=>'bg-green-50',  'icon'=>'text-green-600',  'badge'=>'bg-green-100 text-green-700',   'bar'=>'bg-green-500'],
+            'pink'   => ['bg'=>'bg-pink-50',   'icon'=>'text-pink-500',   'badge'=>'bg-pink-100 text-pink-700',     'bar'=>'bg-pink-500'],
+            'purple' => ['bg'=>'bg-purple-50', 'icon'=>'text-purple-500', 'badge'=>'bg-purple-100 text-purple-700', 'bar'=>'bg-purple-500'],
+            'teal'   => ['bg'=>'bg-teal-50',   'icon'=>'text-teal-600',   'badge'=>'bg-teal-100 text-teal-700',     'bar'=>'bg-teal-500'],
+            'cyan'   => ['bg'=>'bg-cyan-50',   'icon'=>'text-cyan-600',   'badge'=>'bg-cyan-100 text-cyan-700',     'bar'=>'bg-cyan-500'],
+            'yellow' => ['bg'=>'bg-yellow-50', 'icon'=>'text-yellow-600', 'badge'=>'bg-yellow-100 text-yellow-700', 'bar'=>'bg-yellow-500'],
+            'orange' => ['bg'=>'bg-orange-50', 'icon'=>'text-orange-500', 'badge'=>'bg-orange-100 text-orange-700', 'bar'=>'bg-orange-500'],
+            'red'    => ['bg'=>'bg-red-50',    'icon'=>'text-red-500',    'badge'=>'bg-red-100 text-red-700',       'bar'=>'bg-red-500'],
+            'gray'   => ['bg'=>'bg-gray-50',   'icon'=>'text-gray-500',   'badge'=>'bg-gray-100 text-gray-700',     'bar'=>'bg-gray-400'],
+        ];
+
+        $deptStats = collect($departments)->mapWithKeys(function ($meta, $name) use ($allRopas) {
+            $records = $allRopas->where('department', $name);
+
+            return [$name => [
+                'total'    => $records->count(),
+                'pending'  => $records->where('status', Ropa::STATUS_PENDING)->count(),
+                'approved' => $records->where('status', 'Approved')->count(),
+                'reviewed' => $records->where('status', Ropa::STATUS_REVIEWED)->count(),
+                'rejected' => $records->where('status', 'Rejected')->count(),
+            ]];
+        })->all();
 
         return view('admindashboard.dashboard', compact(
             'user',
+            'allRopas',
+            'totalRecords',
+            'pendingCount',
             'critical',
             'high',
             'medium',
@@ -68,7 +108,10 @@ public function admin()
             'mediumRisk',
             'lowRisk',
             'overdueReviews',
-            'tasksCompleted'
+            'tasksCompleted',
+            'departments',
+            'colorMap',
+            'deptStats'
         ));
     }
 

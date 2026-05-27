@@ -3,6 +3,23 @@
 @section('title', 'Admin Dashboard')
 
 @section('content')
+@php
+    $displayList = function ($value) {
+        if (is_string($value) && str_starts_with($value, '[')) {
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $value = $decoded;
+            }
+        }
+
+        if (is_array($value)) {
+            $value = array_filter($value, fn ($item) => $item !== null && $item !== '');
+            return count($value) ? implode(', ', $value) : 'N/A';
+        }
+
+        return filled($value) ? $value : 'N/A';
+    };
+@endphp
 <!-- Main Content Container -->
 <div class="container mx-auto py-6">
 
@@ -50,8 +67,8 @@
                         <th class="py-3 px-4">Department</th>
                         <th class="py-3 px-4">Status</th>
                         <th class="py-3 px-4">Date </th>
-                        <th class="py-3 px-4">Processor</th>
-                        <th class="py-3 px-4">Country</th>
+                        <th class="py-3 px-4">Sharing</th>
+                        <th class="py-3 px-4">Country/Location</th>
                         <th class="py-3 px-4">Lawful Basis</th>
                         <th class="py-3 px-4 text-center">Actions</th>
                     </tr>
@@ -60,19 +77,19 @@
                     @foreach($ropas as $ropa)
                         <tr class="border-b hover:bg-gray-50 transition">
                             <td class="py-3 px-4 font-semibold text-gray-800">{{ $ropa->organisation_name }}</td>
-                            <td class="py-3 px-4">{{ $ropa->department_name ?? $ropa->other_department }}</td>
+                            <td class="py-3 px-4">{{ $ropa->department ?? $displayList($ropa->other_department) }}</td>
                             <td class="py-3 px-4">
                                 <span class="px-2 py-1 rounded text-xs font-semibold
-                                    {{ $ropa->status == 'Approved' ? 'bg-green-100 text-green-700' :
+                                    {{ in_array($ropa->status, ['Approved', 'Reviewed']) ? 'bg-green-100 text-green-700' :
                                        ($ropa->status == 'Pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700') }}">
                                     {{ ucfirst($ropa->status) }}
                                 </span>
                             </td>
                             <td class="py-3 px-4">{{ $ropa->date_submitted?->format('d M Y') }}</td>
-                            <td class="py-3 px-4">{{ $ropa->processor ?? '—' }}</td>
-                            <td class="py-3 px-4">{{ $ropa->country ?? '—' }}</td>
+                            <td class="py-3 px-4">{{ $displayList($ropa->sharing_type) }}</td>
+                            <td class="py-3 px-4">{{ $displayList($ropa->transborder_countries) }}</td>
                             <td class="py-3 px-4">
-                                {{ is_array($ropa->lawful_basis) ? implode(', ', $ropa->lawful_basis) : ($ropa->lawful_basis ?? '—') }}
+                                {{ $displayList($ropa->lawful_basis) }}
                             </td>
                             <td class="py-3 px-4 text-center">
                                 <div class="flex flex-col sm:flex-row justify-center items-center gap-2">

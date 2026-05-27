@@ -45,14 +45,14 @@
     <div class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-xl border-l-4 border-orange-500 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between gap-2">
         <div class="min-w-0">
             <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide leading-tight">Total Records</p>
-            <p class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ \App\Models\Ropa::count() }}</p>
+            <p class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ $totalRecords ?? $allRopas->count() }}</p>
         </div>
         <i data-feather="database" class="w-7 h-7 lg:w-8 lg:h-8 text-orange-500 flex-shrink-0"></i>
     </div>
     <div class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-xl border-l-4 border-yellow-500 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between gap-2">
         <div class="min-w-0">
             <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide leading-tight">Pending</p>
-            <p class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ \App\Models\Ropa::where('status','Pending')->count() }}</p>
+            <p class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{{ $pendingCount ?? 0 }}</p>
         </div>
         <i data-feather="clock" class="w-7 h-7 lg:w-8 lg:h-8 text-yellow-500 flex-shrink-0"></i>
     </div>
@@ -74,43 +74,7 @@
 
 <!-- ── DEPARTMENT BREAKDOWN ── -->
 @php
-    $departments = [
-        'Data Protection'               => ['icon' => 'shield',       'color' => 'indigo'],
-        'IT'                            => ['icon' => 'monitor',      'color' => 'blue'],
-        'HR'                            => ['icon' => 'users',        'color' => 'green'],
-        'Community Engagement'          => ['icon' => 'heart',        'color' => 'pink'],
-        'Data & Biostatisitcs'          => ['icon' => 'bar-chart-2',  'color' => 'purple'],
-        'Laboratory'                    => ['icon' => 'activity',     'color' => 'teal'],
-        'Pharmacy'                      => ['icon' => 'package',      'color' => 'cyan'],
-        'Finance & Administration'      => ['icon' => 'dollar-sign',  'color' => 'yellow'],
-        'Clinical Operations (ClinOps)' => ['icon' => 'clipboard',    'color' => 'orange'],
-        'Project Management'            => ['icon' => 'briefcase',    'color' => 'red'],
-        'Legal & Compliance'            => ['icon' => 'book',         'color' => 'gray'],
-    ];
-    $colorMap = [
-        'indigo' => ['bg'=>'bg-indigo-50', 'icon'=>'text-indigo-500', 'badge'=>'bg-indigo-100 text-indigo-700', 'bar'=>'bg-indigo-500'],
-        'blue'   => ['bg'=>'bg-blue-50',   'icon'=>'text-blue-500',   'badge'=>'bg-blue-100 text-blue-700',     'bar'=>'bg-blue-500'],
-        'green'  => ['bg'=>'bg-green-50',  'icon'=>'text-green-600',  'badge'=>'bg-green-100 text-green-700',   'bar'=>'bg-green-500'],
-        'pink'   => ['bg'=>'bg-pink-50',   'icon'=>'text-pink-500',   'badge'=>'bg-pink-100 text-pink-700',     'bar'=>'bg-pink-500'],
-        'purple' => ['bg'=>'bg-purple-50', 'icon'=>'text-purple-500', 'badge'=>'bg-purple-100 text-purple-700', 'bar'=>'bg-purple-500'],
-        'teal'   => ['bg'=>'bg-teal-50',   'icon'=>'text-teal-600',   'badge'=>'bg-teal-100 text-teal-700',     'bar'=>'bg-teal-500'],
-        'cyan'   => ['bg'=>'bg-cyan-50',   'icon'=>'text-cyan-600',   'badge'=>'bg-cyan-100 text-cyan-700',     'bar'=>'bg-cyan-500'],
-        'yellow' => ['bg'=>'bg-yellow-50', 'icon'=>'text-yellow-600', 'badge'=>'bg-yellow-100 text-yellow-700', 'bar'=>'bg-yellow-500'],
-        'orange' => ['bg'=>'bg-orange-50', 'icon'=>'text-orange-500', 'badge'=>'bg-orange-100 text-orange-700', 'bar'=>'bg-orange-500'],
-        'red'    => ['bg'=>'bg-red-50',    'icon'=>'text-red-500',    'badge'=>'bg-red-100 text-red-700',       'bar'=>'bg-red-500'],
-        'gray'   => ['bg'=>'bg-gray-50',   'icon'=>'text-gray-500',   'badge'=>'bg-gray-100 text-gray-700',     'bar'=>'bg-gray-400'],
-    ];
-    $totalRopa = \App\Models\Ropa::count() ?: 1;
-    $deptStats = [];
-    foreach ($departments as $name => $meta) {
-        $deptStats[$name] = [
-            'total'    => \App\Models\Ropa::where('department', $name)->count(),
-            'pending'  => \App\Models\Ropa::where('department', $name)->where('status', 'Pending')->count(),
-            'approved' => \App\Models\Ropa::where('department', $name)->where('status', 'Approved')->count(),
-            'reviewed' => \App\Models\Ropa::where('department', $name)->where('status', 'Reviewed')->count(),
-            'rejected' => \App\Models\Ropa::where('department', $name)->where('status', 'Rejected')->count(),
-        ];
-    }
+    $totalRopa = max($totalRecords ?? $allRopas->count(), 1);
 @endphp
 
 <div class="mb-6 lg:mb-8">
@@ -153,8 +117,6 @@
 </div>
 
 <!-- ── ROPA TABLE ── -->
-@php $allRopas = \App\Models\Ropa::with('user')->latest('created_at')->get(); @endphp
-
 <!-- Embed all row data as JSON for JS export -->
 <script id="ropaDataJson" type="application/json">
 [
@@ -166,7 +128,7 @@
         "processes":    {!! json_encode(is_string($r->processes) ? implode(', ', json_decode($r->processes, true) ?? [$r->processes]) : (is_array($r->processes) ? implode(', ', $r->processes) : '—')) !!},
         "submitted_by": {!! json_encode($r->user->name ?? 'Unknown') !!},
         "email":        {!! json_encode($r->user->email ?? '') !!},
-        "date":         "{{ $r->created_at->format('d M Y') }}",
+        "date":         "{{ optional($r->date_submitted ?? $r->created_at)->format('d M Y') }}",
         "status":       {!! json_encode($r->status ?? 'Pending') !!}
     }{{ !$loop->last ? ',' : '' }}
 @endforeach
@@ -325,8 +287,8 @@
                             </div>
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap hidden lg:table-cell">
-                            <div class="text-xs font-semibold text-gray-900 dark:text-gray-100">{{ $ropa->created_at->format('M d, Y') }}</div>
-                            <div class="text-xs text-gray-400">{{ $ropa->created_at->format('h:i A') }}</div>
+                            <div class="text-xs font-semibold text-gray-900 dark:text-gray-100">{{ optional($ropa->date_submitted ?? $ropa->created_at)->format('M d, Y') }}</div>
+                            <div class="text-xs text-gray-400">{{ $ropa->date_submitted ? 'Submitted' : $ropa->created_at->format('h:i A') }}</div>
                         </td>
                         <td class="px-4 py-3">
                             @php $status = $ropa->status ?? 'Pending'; $sc = match($status) { 'Reviewed','Approved' => 'bg-green-100 text-green-700 border-green-200', 'Rejected' => 'bg-red-100 text-red-700 border-red-200', default => 'bg-yellow-100 text-yellow-700 border-yellow-200' }; @endphp
@@ -334,7 +296,7 @@
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap" onclick="event.stopPropagation()">
                             <div class="flex items-center justify-center gap-1">
-                                <a href="{{ route('ropa.show', $ropa->id) }}"
+                                <a href="{{ route('admin.ropa.show', $ropa->id) }}"
                                    class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="View">
                                     <i data-feather="eye" class="w-4 h-4"></i>
                                 </a>
@@ -384,7 +346,7 @@
                             </div>
                             <div class="min-w-0">
                                 <p class="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate">{{ $ropa->organisation_name ?? 'N/A' }}</p>
-                                <p class="text-xs text-gray-400">#{{ $ropa->id }} · {{ $ropa->created_at->format('M d, Y') }}</p>
+                                <p class="text-xs text-gray-400">#{{ $ropa->id }} · {{ optional($ropa->date_submitted ?? $ropa->created_at)->format('M d, Y') }}</p>
                             </div>
                         </div>
                     </div>
@@ -405,7 +367,7 @@
                     </div>
                 @endif
                 <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700" onclick="event.stopPropagation()">
-                    <a href="{{ route('ropa.show', $ropa->id) }}"
+                    <a href="{{ route('admin.ropa.show', $ropa->id) }}"
                        class="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-all">
                         <i data-feather="eye" class="w-3.5 h-3.5"></i> View
                     </a>
@@ -431,9 +393,9 @@
                 of <span class="font-bold text-gray-800 dark:text-gray-200">{{ $allRopas->count() }}</span> records
             </p>
             <div class="flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
-                <span class="font-semibold text-gray-600 dark:text-gray-300">Total: {{ \App\Models\Ropa::count() }}</span>
-                <span class="font-semibold text-yellow-600">Pending: {{ \App\Models\Ropa::where('status','Pending')->count() }}</span>
-                <span class="font-semibold text-green-600">Reviewed: {{ \App\Models\Ropa::where('status','Reviewed')->count() }}</span>
+                <span class="font-semibold text-gray-600 dark:text-gray-300">Total: {{ $totalRecords ?? $allRopas->count() }}</span>
+                <span class="font-semibold text-yellow-600">Pending: {{ $pendingCount ?? 0 }}</span>
+                <span class="font-semibold text-green-600">Reviewed: {{ $tasksCompleted ?? 0 }}</span>
             </div>
         </div>
     </div>

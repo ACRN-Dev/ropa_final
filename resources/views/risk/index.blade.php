@@ -12,8 +12,8 @@
     $critical   = $allRisks->where('risk_level', 'critical');
 
     $buckets = [
-        'low'      => ['label' => 'Low Risk',      'color' => 'green',  'icon' => 'shield',         'items' => $low,      'score' => '1–5'],
-        'medium'   => ['label' => 'Medium Risk',   'color' => 'yellow', 'icon' => 'alert-circle',   'items' => $medium,   'score' => '6–11'],
+        'low'      => ['label' => 'Low Risk',      'color' => 'green',  'icon' => 'shield',          'items' => $low,      'score' => '1–5'],
+        'medium'   => ['label' => 'Medium Risk',   'color' => 'yellow', 'icon' => 'alert-circle',    'items' => $medium,   'score' => '6–11'],
         'high'     => ['label' => 'High Risk',     'color' => 'orange', 'icon' => 'alert-triangle',  'items' => $high,     'score' => '12–19'],
         'critical' => ['label' => 'Critical Risk', 'color' => 'red',    'icon' => 'zap',             'items' => $critical, 'score' => '20–25'],
     ];
@@ -78,7 +78,7 @@
     </div>
 </div>
 
-<!-- ── PIPELINE PROGRESS BAR (like the screenshot) ── -->
+<!-- ── PIPELINE PROGRESS BAR ── -->
 <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 mb-6">
     <div class="flex items-center gap-2 mb-3">
         <i data-feather="activity" class="w-4 h-4 text-orange-500"></i>
@@ -109,7 +109,7 @@
     </div>
 </div>
 
-<!-- ── BULK ACTION BAR (appears when items selected) ── -->
+<!-- ── BULK ACTION BAR (bucket cards) ── -->
 <div id="bulkBar"
      class="hidden sticky top-2 z-30 mb-4 bg-white dark:bg-gray-800 border border-orange-300 rounded-xl shadow-lg px-4 py-3
             flex items-center gap-3 flex-wrap">
@@ -201,18 +201,15 @@
                     @endif
 
                     <div class="flex flex-wrap gap-1 mb-2">
-                        <!-- Status badge -->
                         <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold"
                               style="background: {{ $c['badgebg'] }}; color: {{ $c['badge'] }};">
                             {{ ucfirst(str_replace('_', ' ', $risk->status ?? 'open')) }}
                         </span>
-                        <!-- Score badge -->
                         <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-600">
                             Score: {{ $risk->inherent_risk_score ?? '—' }}
                         </span>
                     </div>
 
-                    <!-- Owner + actions -->
                     <div class="flex items-center justify-between mt-1">
                         @if($risk->owner)
                             <div class="flex items-center gap-1.5">
@@ -254,16 +251,45 @@
 
 <!-- ── PROCESSING ACTIVITIES TABLE ── -->
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mt-6">
-    <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-4 lg:px-6 py-3 lg:py-4">
+
+    <!-- Table header -->
+    <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-4 lg:px-6 py-3 lg:py-4 flex items-center justify-between">
         <h2 class="text-base lg:text-lg font-bold text-white flex items-center gap-2">
             <i data-feather="database" class="w-5 h-5 flex-shrink-0"></i>
             Processing Activities
         </h2>
+        <span class="text-xs text-white/80 font-medium">Select rows to move them to a risk bucket</span>
     </div>
+
+    <!-- Table bulk action bar -->
+    <div id="tableBulkBar" class="hidden items-center gap-3 flex-wrap px-4 py-3 bg-orange-50 border-b border-orange-200">
+        <span class="text-sm font-bold text-orange-700">
+            <span id="tableSelectedCount">0</span> record(s) selected
+        </span>
+        <span class="text-orange-300">|</span>
+        <span class="text-xs text-gray-600 font-semibold">Move to bucket:</span>
+        @foreach(['low'=>['Low','bg-green-50 text-green-700 border-green-200 hover:bg-green-100'],'medium'=>['Medium','bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100'],'high'=>['High','bg-orange-100 text-orange-700 border-orange-300 hover:bg-orange-200'],'critical'=>['Critical','bg-red-50 text-red-700 border-red-200 hover:bg-red-100']] as $level => [$label, $cls])
+            <button onclick="tableMoveToBucket('{{ $level }}')"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition border {{ $cls }}">
+                {{ $label }}
+            </button>
+        @endforeach
+        <button onclick="clearTableSelection()"
+                class="ml-auto inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-500
+                       bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+            <i data-feather="x" class="w-3 h-3"></i> Clear
+        </button>
+    </div>
+
     <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+        <table class="w-full text-sm" id="ropaTable">
             <thead>
                 <tr class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
+                    <!-- Select all -->
+                    <th class="px-4 py-3 w-10">
+                        <input type="checkbox" id="tableSelectAll" onchange="toggleTableSelectAll()"
+                               class="w-4 h-4 rounded accent-orange-500 cursor-pointer">
+                    </th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Organisation</th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider hidden md:table-cell">Department</th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Processing Activities</th>
@@ -277,20 +303,35 @@
                 @php
                     $rl = $ropa->risk_level;
                     $rlStyle = match($rl) {
-                        'critical' => ['bg-red-100 text-red-700 border-red-200',    'zap'],
+                        'critical' => ['bg-red-100 text-red-700 border-red-200',         'zap'],
                         'high'     => ['bg-orange-100 text-orange-700 border-orange-200', 'alert-triangle'],
                         'medium'   => ['bg-yellow-100 text-yellow-700 border-yellow-200', 'alert-circle'],
-                        'low'      => ['bg-green-100 text-green-700 border-green-200',   'shield'],
-                        default    => ['bg-gray-100 text-gray-500 border-gray-200',      'minus'],
+                        'low'      => ['bg-green-100 text-green-700 border-green-200',    'shield'],
+                        default    => ['bg-gray-100 text-gray-500 border-gray-200',       'minus'],
                     };
                     $sc = match($ropa->status) {
                         'Reviewed','Approved' => 'bg-green-100 text-green-700 border-green-200',
                         'Rejected'            => 'bg-red-100 text-red-700 border-red-200',
                         default               => 'bg-yellow-100 text-yellow-700 border-yellow-200',
                     };
-                    $activities = is_array($ropa->processes) ? implode(', ', $ropa->processes) : ($ropa->processes ?? '—');
+                    $raw = $ropa->getRawOriginal('processes');
+                    $decoded = json_decode($raw, true);
+                    if (is_string($decoded)) { $decoded = json_decode($decoded, true); }
+                    $activities = is_array($decoded) ? implode(', ', $decoded) : ($ropa->processes ?? '—');
                 @endphp
-                <tr class="hover:bg-orange-50 dark:hover:bg-gray-700/50 transition-colors">
+                <tr class="table-row hover:bg-orange-50 dark:hover:bg-gray-700/50 transition-colors"
+                    data-ropa-id="{{ $ropa->id }}"
+                    data-risk-level="{{ $rl }}">
+
+                    <!-- Row checkbox -->
+                    <td class="px-4 py-3">
+                        <input type="checkbox"
+                               class="table-row-checkbox w-4 h-4 rounded accent-orange-500 cursor-pointer"
+                               data-ropa-id="{{ $ropa->id }}"
+                               data-risk-level="{{ $rl }}"
+                               onchange="handleTableCheckboxChange()">
+                    </td>
+
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-2">
                             <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg
@@ -307,9 +348,10 @@
                         <span class="text-xs text-gray-700 dark:text-gray-300 line-clamp-2" title="{{ $activities }}">{{ $activities }}</span>
                     </td>
                     <td class="px-4 py-3 hidden lg:table-cell">
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border {{ $rlStyle[0] }}">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border {{ $rlStyle[0] }}
+                                     risk-level-badge" data-ropa-id="{{ $ropa->id }}">
                             <i data-feather="{{ $rlStyle[1] }}" class="w-3 h-3"></i>
-                            {{ ucfirst($rl) }}
+                            <span>{{ ucfirst($rl) }}</span>
                         </span>
                     </td>
                     <td class="px-4 py-3">
@@ -332,7 +374,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="px-4 py-16 text-center">
+                    <td colspan="7" class="px-4 py-16 text-center">
                         <i data-feather="inbox" class="w-10 h-10 text-gray-300 mx-auto mb-2"></i>
                         <p class="text-sm text-gray-400">No processing activities found</p>
                     </td>
@@ -341,6 +383,7 @@
             </tbody>
         </table>
     </div>
+
     <div class="px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between">
         <p class="text-xs text-gray-500">Showing latest 20 ROPA records</p>
         <a href="{{ route('admin.dashboard') }}" class="text-xs font-semibold text-orange-500 hover:underline">View all →</a>
@@ -353,8 +396,9 @@
         outline: 2px dashed #f97316;
         outline-offset: -2px;
     }
-    .risk-card.dragging { opacity: 0.4; transform: scale(0.97); }
-    .risk-card.selected { outline: 2px solid #f97316; outline-offset: 1px; }
+    .risk-card.dragging  { opacity: 0.4; transform: scale(0.97); }
+    .risk-card.selected  { outline: 2px solid #f97316; outline-offset: 1px; }
+    .table-row.row-selected { background: #fff7ed !important; }
     .line-clamp-2 { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
 </style>
 
@@ -363,7 +407,7 @@
 
     var CSRF = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-    // ── Drag state ──────────────────────────────────────────────
+    // ── Drag state ───────────────────────────────────────────────
     var draggedId    = null;
     var draggedLevel = null;
     var draggedEl    = null;
@@ -389,7 +433,6 @@
     }
 
     function handleDragLeave(e) {
-        // Only remove if leaving the drop zone itself, not a child
         if (!e.currentTarget.contains(e.relatedTarget)) {
             e.currentTarget.classList.remove('drag-over');
         }
@@ -398,26 +441,19 @@
     function handleDrop(e, newLevel) {
         e.preventDefault();
         e.currentTarget.classList.remove('drag-over');
-
         if (!draggedId || newLevel === draggedLevel) return;
 
         moveRisk(draggedId, newLevel, function() {
-            // Move the card DOM element to the new bucket
             var drop = document.querySelector('.bucket-drop[data-level="' + newLevel + '"]');
             if (drop && draggedEl) {
-                // Remove empty placeholder if present
                 var placeholder = drop.querySelector('.empty-placeholder');
                 if (placeholder) placeholder.remove();
-
                 draggedEl.dataset.level = newLevel;
                 drop.appendChild(draggedEl);
-
-                // Add empty placeholder to old bucket if now empty
                 var oldDrop = document.querySelector('.bucket-drop[data-level="' + draggedLevel + '"]');
                 if (oldDrop && oldDrop.querySelectorAll('.risk-card').length === 0) {
                     addEmptyPlaceholder(oldDrop, draggedLevel);
                 }
-
                 draggedLevel = newLevel;
                 updateCounts();
                 feather.replace();
@@ -425,7 +461,7 @@
         });
     }
 
-    // ── Multi-select ─────────────────────────────────────────────
+    // ── Bucket card multi-select ─────────────────────────────────
     var selectedIds = new Set();
 
     function handleCheckboxChange() {
@@ -433,24 +469,16 @@
         document.querySelectorAll('.risk-checkbox:checked').forEach(function(cb) {
             selectedIds.add(cb.dataset.id);
         });
-        // Highlight selected cards
         document.querySelectorAll('.risk-card').forEach(function(card) {
-            if (selectedIds.has(card.dataset.id)) {
-                card.classList.add('selected');
-            } else {
-                card.classList.remove('selected');
-            }
+            card.classList.toggle('selected', selectedIds.has(card.dataset.id));
         });
-        // Show/hide bulk bar
         var bar = document.getElementById('bulkBar');
         var countEl = document.getElementById('selectedCount');
         if (selectedIds.size > 0) {
-            bar.classList.remove('hidden');
-            bar.classList.add('flex');
+            bar.classList.remove('hidden'); bar.classList.add('flex');
             countEl.textContent = selectedIds.size;
         } else {
-            bar.classList.add('hidden');
-            bar.classList.remove('flex');
+            bar.classList.add('hidden'); bar.classList.remove('flex');
         }
     }
 
@@ -464,47 +492,148 @@
 
     function bulkMove(newLevel) {
         if (selectedIds.size === 0) return;
-
         var ids = Array.from(selectedIds);
         var moved = 0;
-
         ids.forEach(function(id) {
             var card = document.querySelector('.risk-card[data-id="' + id + '"]');
             if (!card || card.dataset.level === newLevel) { moved++; checkDone(); return; }
-
             moveRisk(id, newLevel, function() {
-                var oldLevel  = card.dataset.level;
-                var drop      = document.querySelector('.bucket-drop[data-level="' + newLevel + '"]');
-                var oldDrop   = document.querySelector('.bucket-drop[data-level="' + oldLevel + '"]');
-
+                var oldLevel = card.dataset.level;
+                var drop     = document.querySelector('.bucket-drop[data-level="' + newLevel + '"]');
+                var oldDrop  = document.querySelector('.bucket-drop[data-level="' + oldLevel + '"]');
                 if (drop) {
-                    var placeholder = drop.querySelector('.empty-placeholder');
-                    if (placeholder) placeholder.remove();
+                    var ph = drop.querySelector('.empty-placeholder');
+                    if (ph) ph.remove();
                     card.dataset.level = newLevel;
                     var cb = card.querySelector('.risk-checkbox');
                     if (cb) cb.dataset.level = newLevel;
                     drop.appendChild(card);
                 }
-
                 if (oldDrop && oldDrop.querySelectorAll('.risk-card').length === 0) {
                     addEmptyPlaceholder(oldDrop, oldLevel);
                 }
-
-                moved++;
-                checkDone();
+                moved++; checkDone();
             });
         });
-
         function checkDone() {
-            if (moved === ids.length) {
-                updateCounts();
-                clearSelection();
-                feather.replace();
-            }
+            if (moved === ids.length) { updateCounts(); clearSelection(); feather.replace(); }
         }
     }
 
-    // ── API call ─────────────────────────────────────────────────
+    // ── Table multi-select ───────────────────────────────────────
+    var tableSelectedIds = new Set();  // stores ropa IDs (not risk IDs)
+
+    function toggleTableSelectAll() {
+        var master = document.getElementById('tableSelectAll');
+        document.querySelectorAll('.table-row-checkbox').forEach(function(cb) {
+            cb.checked = master.checked;
+        });
+        handleTableCheckboxChange();
+    }
+
+    function handleTableCheckboxChange() {
+        tableSelectedIds.clear();
+        document.querySelectorAll('.table-row-checkbox:checked').forEach(function(cb) {
+            tableSelectedIds.add(cb.dataset.ropaId);
+        });
+
+        // Highlight selected rows
+        document.querySelectorAll('.table-row').forEach(function(row) {
+            row.classList.toggle('row-selected', tableSelectedIds.has(row.dataset.ropaId));
+        });
+
+        // Sync master checkbox state
+        var all   = document.querySelectorAll('.table-row-checkbox');
+        var checked = document.querySelectorAll('.table-row-checkbox:checked');
+        var master  = document.getElementById('tableSelectAll');
+        master.indeterminate = checked.length > 0 && checked.length < all.length;
+        master.checked       = checked.length > 0 && checked.length === all.length;
+
+        // Show/hide table bulk bar
+        var bar = document.getElementById('tableBulkBar');
+        var countEl = document.getElementById('tableSelectedCount');
+        if (tableSelectedIds.size > 0) {
+            bar.classList.remove('hidden'); bar.classList.add('flex');
+            countEl.textContent = tableSelectedIds.size;
+        } else {
+            bar.classList.add('hidden'); bar.classList.remove('flex');
+        }
+    }
+
+    function clearTableSelection() {
+        document.querySelectorAll('.table-row-checkbox').forEach(function(cb) { cb.checked = false; });
+        document.getElementById('tableSelectAll').checked = false;
+        document.getElementById('tableSelectAll').indeterminate = false;
+        document.querySelectorAll('.table-row.row-selected').forEach(function(r) { r.classList.remove('row-selected'); });
+        tableSelectedIds.clear();
+        document.getElementById('tableBulkBar').classList.add('hidden');
+        document.getElementById('tableBulkBar').classList.remove('flex');
+    }
+
+    // Move selected ROPA records' associated enterprise risks to a new bucket
+    function tableMoveToBucket(newLevel) {
+        if (tableSelectedIds.size === 0) return;
+
+        var ids   = Array.from(tableSelectedIds);
+        var total = ids.length;
+        var done  = 0;
+
+        ids.forEach(function(ropaId) {
+            // Call a ROPA-level endpoint that bulk-updates the risk_level
+            // of all EnterpriseRisk records linked to this ROPA
+            fetch('/ropa/' + ropaId + '/move-risks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': CSRF,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ risk_level: newLevel })
+            })
+            .then(function(res) {
+                if (!res.ok) throw new Error('Server error ' + res.status);
+                return res.json();
+            })
+            .then(function() {
+                // Update the risk level badge in the table row
+                var row   = document.querySelector('.table-row[data-ropa-id="' + ropaId + '"]');
+                var badge = row ? row.querySelector('.risk-level-badge') : null;
+                if (badge) {
+                    var levelLabels = { low:'Low', medium:'Medium', high:'High', critical:'Critical' };
+                    var levelClasses = {
+                        low:      'bg-green-100 text-green-700 border-green-200',
+                        medium:   'bg-yellow-100 text-yellow-700 border-yellow-200',
+                        high:     'bg-orange-100 text-orange-700 border-orange-200',
+                        critical: 'bg-red-100 text-red-700 border-red-200',
+                    };
+                    var levelIcons = { low:'shield', medium:'alert-circle', high:'alert-triangle', critical:'zap' };
+                    // Strip old colour classes
+                    ['bg-green-100','text-green-700','border-green-200',
+                     'bg-yellow-100','text-yellow-700','border-yellow-200',
+                     'bg-orange-100','text-orange-700','border-orange-200',
+                     'bg-red-100','text-red-700','border-red-200',
+                     'bg-gray-100','text-gray-500','border-gray-200'
+                    ].forEach(function(cls) { badge.classList.remove(cls); });
+                    levelClasses[newLevel].split(' ').forEach(function(cls) { badge.classList.add(cls); });
+                    badge.innerHTML = '<i data-feather="' + levelIcons[newLevel] + '" class="w-3 h-3"></i><span>' + levelLabels[newLevel] + '</span>';
+                    if (row) row.dataset.riskLevel = newLevel;
+                }
+                done++;
+                if (done === total) {
+                    clearTableSelection();
+                    feather.replace();
+                    showToast(total + ' record(s) moved to ' + newLevel + ' bucket.', 'success');
+                }
+            })
+            .catch(function(err) {
+                console.error(err);
+                done++;
+                if (done === total) { showToast('Some records failed to move. Please try again.', 'error'); }
+            });
+        });
+    }
+
+    // ── Shared API call (for bucket card moves) ──────────────────
     function moveRisk(id, newLevel, callback) {
         fetch('/risk-register/' + id, {
             method: 'PUT',
@@ -536,7 +665,6 @@
         });
     }
 
-    var emptyIcons = { low:'shield', medium:'alert-circle', high:'alert-triangle', critical:'zap' };
     var emptyLabels = { low:'No low risk items', medium:'No medium risk items', high:'No high risk items', critical:'No critical risk items' };
 
     function addEmptyPlaceholder(drop, level) {

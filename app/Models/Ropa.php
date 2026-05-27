@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+
 use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,12 +13,15 @@ class Ropa extends Model
 {
     use HasFactory;
 
-    const STATUS_PENDING = 'Pending';
+    const STATUS_PENDING  = 'Pending';
     const STATUS_REVIEWED = 'Reviewed';
+
+    const RISK_LEVELS = ['low', 'medium', 'high', 'critical'];
 
     protected $fillable = [
         'user_id',
         'status',
+        'risk_level',
         'organisation_name',
         'other_organisation_name',
         'department',
@@ -54,40 +58,43 @@ class Ropa extends Model
     ];
 
     protected $casts = [
-        'processes' => 'array',
-        'data_sources' => 'array',
-        'data_sources_other' => 'array',
-        'data_formats' => 'array',
-        'data_formats_other' => 'array',
-        'information_nature' => 'array',
-        'personal_data_categories' => 'array',
+        'processes'                      => 'array',
+        'data_sources'                   => 'array',
+        'data_sources_other'             => 'array',
+        'data_formats'                   => 'array',
+        'data_formats_other'             => 'array',
+        'information_nature'             => 'array',
+        'personal_data_categories'       => 'array',
         'personal_data_categories_other' => 'array',
-        'records_count' => 'array',
-        'data_volume' => 'array',
-        'retention_period_years' => 'array',
-        'access_estimate' => 'array',
-        'retention_rationale' => 'array',
-        'local_organizations' => 'array',
-        'transborder_countries' => 'array',
-        'sharing_type' => 'array',
-        'access_measures' => 'array',
-        'technical_measures' => 'array',
-        'technical_measures_other' => 'array',
-        'organisational_measures' => 'array',
-        'organisational_measures_other' => 'array',
-        'lawful_basis' => 'array',
-        'lawful_basis_other' => 'array',
-        'risk_report' => 'array',
-        'information_shared' => 'boolean',
-        'sharing_local' => 'boolean',
-        'sharing_transborder' => 'boolean',
-        'access_control' => 'boolean',
-        'archived' => 'boolean',
+        'records_count'                  => 'array',
+        'data_volume'                    => 'array',
+        'retention_period_years'         => 'array',
+        'access_estimate'                => 'array',
+        'retention_rationale'            => 'array',
+        'local_organizations'            => 'array',
+        'transborder_countries'          => 'array',
+        'sharing_type'                   => 'array',
+        'access_measures'                => 'array',
+        'technical_measures'             => 'array',
+        'technical_measures_other'       => 'array',
+        'organisational_measures'        => 'array',
+        'organisational_measures_other'  => 'array',
+        'lawful_basis'                   => 'array',
+        'lawful_basis_other'             => 'array',
+        'risk_report'                    => 'array',
+        'information_shared'             => 'boolean',
+        'sharing_local'                  => 'boolean',
+        'sharing_transborder'            => 'boolean',
+        'access_control'                 => 'boolean',
+        'archived'                       => 'boolean',
+        'risk_level'                     => 'string',
+        'date_submitted'                 => 'datetime',
     ];
 
     // ---------------------------------------------------
     // Relationships
     // ---------------------------------------------------
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -98,26 +105,17 @@ class Ropa extends Model
         return $this->hasMany(Review::class);
     }
 
-    /**
-     * Get all enterprise risks associated with this ROPA record
-     */
     public function enterpriseRisks()
     {
         return $this->hasMany(EnterpriseRisk::class, 'source_id')
                     ->where('source_type', 'ROPA');
     }
 
-    /**
-     * Get only open risks
-     */
     public function openRisks()
     {
         return $this->enterpriseRisks()->where('status', 'open');
     }
 
-    /**
-     * Get high priority risks
-     */
     public function highPriorityRisks()
     {
         return $this->enterpriseRisks()->whereIn('risk_level', ['high', 'critical']);
@@ -126,6 +124,7 @@ class Ropa extends Model
     // ---------------------------------------------------
     // Status helpers
     // ---------------------------------------------------
+
     public function isReviewed(): bool
     {
         return $this->status === self::STATUS_REVIEWED;
@@ -136,62 +135,52 @@ class Ropa extends Model
         return $this->status === self::STATUS_PENDING;
     }
 
-    /**
-     * Check if ROPA has any associated risks
-     */
     public function hasRisks(): bool
     {
         return $this->enterpriseRisks()->exists();
     }
 
     /**
-     * Count total risks
+     * Whether a risk level has been assigned to this ROPA.
      */
+    public function hasRiskLevel(): bool
+    {
+        return !is_null($this->risk_level);
+    }
+
+    // ---------------------------------------------------
+    // Counts
+    // ---------------------------------------------------
+
     public function getRisksCountAttribute(): int
     {
         return $this->enterpriseRisks()->count();
     }
 
-    // App\Models\Ropa.php
-
-public function getRiskLevelAttribute(): string
-{
-    if (!$this->relationLoaded('enterpriseRisks')) {
-        $this->load('enterpriseRisks');
-    }
-
-    if ($this->enterpriseRisks->isEmpty()) {
-        return 'N/A';
-    }
-
-    // Priority order
-    if ($this->enterpriseRisks->contains('risk_level', 'critical')) {
-        return 'critical';
-    }
-
-    if ($this->enterpriseRisks->contains('risk_level', 'high')) {
-        return 'high';
-    }
-
-    if ($this->enterpriseRisks->contains('risk_level', 'medium')) {
-        return 'medium';
-    }
-
-    return 'low';
-}
-
-
-    /**
-     * Count open risks
-     */
     public function getOpenRisksCountAttribute(): int
     {
         return $this->openRisks()->count();
     }
 
     // ---------------------------------------------------
+    // Risk scoring (based on stored risk_level column)
+    // ---------------------------------------------------
+
+    public function calculateRiskScore(): int
+    {
+        return match ($this->risk_level) {
+            'critical' => 4,
+            'high'     => 3,
+            'medium'   => 2,
+            'low'      => 1,
+            default    => 0,
+        };
+    }
+
+    // ---------------------------------------------------
     // Sections (for risk scoring / reporting)
     // ---------------------------------------------------
+
     public static function sections(): array
     {
         return [
@@ -224,26 +213,9 @@ public function getRiskLevelAttribute(): string
     }
 
     // ---------------------------------------------------
-    // Optional risk scoring
+    // Convenience accessors
     // ---------------------------------------------------
-    public function calculateRiskScore(): int
-    {
-        if (!property_exists($this, 'risk_level') || !$this->risk_level) {
-            return 0;
-        }
 
-        return match ($this->risk_level) {
-            'Critical' => 4,
-            'High' => 3,
-            'Medium' => 2,
-            'Low' => 1,
-            default => 0,
-        };
-    }
-
-    // ---------------------------------------------------
-    // Accessors for convenience
-    // ---------------------------------------------------
     public function getOtherOrganisationNamesAttribute(): array
     {
         return $this->other_organisation_name ?? [];
